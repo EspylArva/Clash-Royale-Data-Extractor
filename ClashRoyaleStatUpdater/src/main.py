@@ -1,4 +1,6 @@
 import datetime
+import os
+import tkinter
 
 from SpreadsheetLoader import SpreadsheetLoader, SpreadsheetLoaderSettings
 
@@ -21,7 +23,11 @@ if __name__ == '__main__':
 
 # TODO : Totaux sur page 2 et 3
 
+    print(os.getcwd())
+
     root = Tk()
+    root.iconbitmap('./../resources/icon.ico')
+    #root.tk.call('wm', 'iconphoto', root._w, tkinter.PhotoImage(file='./../resources/icon.ico'))
     gui = GUI(root, summary_manager, warlogs_manager)
     root.mainloop()
 
