@@ -2,7 +2,6 @@ import pandas as pd
 from google.oauth2.service_account import Credentials
 import gspread
 import json
-
 from gspread import Worksheet
 
 default_sheet_id = "1kZ9XdRK1cB3DGuFgKxGk6CrqjeJ3s5vn4QndPet2PDQ"
@@ -62,3 +61,39 @@ class SpreadsheetLoader:
         str_list = list(filter(None, self.get_gc().get_worksheet(index=spreadsheet_index).row_values(1)))
         penultimate_offset = 1 if penultimate else 0
         return len(str_list) - penultimate_offset + 1
+
+    def change_color(self):
+        sheet_id = self.get_gc().get_worksheet(0).id
+        body = {
+            "requests": [
+                {"updateCells": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": 0, "endRowIndex": 51,
+                        "startColumnIndex": 0, "endColumnIndex": 10
+                    },
+                    "rows": [{"values": [{"userEnteredFormat": {
+                        "backgroundColor": {
+                            "alpha": 0
+                        }
+                    }}]}],
+                    "fields": "userEnteredFormat.backgroundColor"
+                }},
+                {"repeatCell": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": 0, "endRowIndex": 7,
+                        "startColumnIndex": 0, "endColumnIndex": 1
+                    },
+                    "cell": {"userEnteredFormat": {
+                        "backgroundColor": {
+                            "red": 1
+                        }
+                    }},
+                    "fields": "userEnteredFormat.backgroundColor"
+                }}
+            ]
+        }
+        self.get_gc().batch_update(body)
+
+        print("OK")

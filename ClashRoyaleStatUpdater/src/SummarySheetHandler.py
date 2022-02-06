@@ -1,5 +1,7 @@
 from datetime import datetime
 from enum import Enum
+from itertools import groupby
+from operator import itemgetter
 
 import pandas as pd
 from pandas import DataFrame
@@ -74,18 +76,13 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
             ColumnIndex.NAME.value: pseudos,
             ColumnIndex.ROLE.value: grades,
             ColumnIndex.CASTLE_LEVEL.value: niveaux_chateau,
+            ColumnIndex.RATIO.value: None,
+            ColumnIndex.AVERAGE.value: None,
             ColumnIndex.TAG.value: tags,
             ColumnIndex.INACTIVITY.value: inactivity
         })
-
         df = self.__import_war_results(df=df)
-
-        row_count = df.shape[0]
         df = df.rename(columns={"Total": ColumnIndex.POINTS.value})
-        # noinspection PyTypeChecker
-        df.insert(0, ColumnIndex.RATIO.value, [0] * row_count)
-        # noinspection PyTypeChecker
-        df.insert(0, ColumnIndex.AVERAGE.value, [0] * row_count)
         return df
 
     def __import_war_results(self, df: DataFrame):
@@ -99,11 +96,7 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
 
     @staticmethod
     def __reorder(df: DataFrame):
-        df = df[ColumnIndex.ordered_col_indexes()[1:]].sort_values(by=[ColumnIndex.POINTS.value], ascending=False)
-        df = df.reset_index(drop=True)
         df.index += 1
-        df.insert(0, ColumnIndex.RANK.value, df.index)
-        df = df.fillna(0)
         for i, row in df.iterrows():
             # noinspection PyTypeChecker
             points = f"""=IFERROR(VLOOKUP(B{i + 1};'Score de Guerre'!A2:C;3; FALSE);0) + IFERROR(VLOOKUP(B{i + 1};'Score de Bateau'!A2:C;3; FALSE);0)"""
@@ -112,25 +105,178 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
             df.at[i, ColumnIndex.POINTS.value] = points
             df.at[i, ColumnIndex.RATIO.value] = ratio
             df.at[i, ColumnIndex.AVERAGE.value] = moyenne
-
         return df
+
+    @staticmethod
+    def _color_header(body: dict, sheet_id: str):
+        request = {
+            "repeatCell": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startRowIndex": 0, "endRowIndex": 1,
+                    "startColumnIndex": 0, "endColumnIndex": 9
+                },
+                "cell": {"userEnteredFormat": {
+                    "backgroundColor": {
+                        "red": 0.4,
+                        "green": 0.2,
+                        "blue": 0.5
+                    }
+                }},
+                "fields": "userEnteredFormat.backgroundColor"
+            }
+        }
+        body["requests"].append(request)
+        return
+
+    @staticmethod
+    def _color_roles(df: DataFrame, body: dict, sheet_id: str):
+        for role in list(Role):
+            raw_indexes = df.index[df['Grade'] == role.value].tolist()
+            for k, g in groupby(enumerate(raw_indexes), lambda ix: ix[0] - ix[1]):
+                indexes = list(map(itemgetter(1), g))
+                print(f'{role.value}: {indexes} -- {int(indexes[0]) + 1}|{int(indexes[-1]) + 2}')
+                request = {
+                    "repeatCell": {
+                        "range": {
+                            "sheetId": sheet_id,
+                            "startRowIndex": int(indexes[0]), "endRowIndex": int(indexes[-1]) + 1,
+                            "startColumnIndex": 2, "endColumnIndex": 3
+                        },
+                        "cell": {"userEnteredFormat": {
+                            "backgroundColor": {
+                                "red": role.r,
+                                "green": role.g,
+                                "blue": role.b
+                            }
+                        }},
+                        "fields": "userEnteredFormat.backgroundColor"
+                    }
+                }
+                body["requests"].append(request)
+
+    @staticmethod
+    def _color_thresholds(df: DataFrame, body: dict, sheet_id: str):
+        top_three = {
+            "repeatCell": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startRowIndex": 1, "endRowIndex": 4,
+                    "startColumnIndex": 0, "endColumnIndex": 9
+                },
+                "cell": {"userEnteredFormat": {
+                    "backgroundColor": {
+                        "red": 1,
+                        "green": 1,
+                        "blue": 0.3
+                    }
+                }},
+                "fields": "userEnteredFormat.backgroundColor"
+            }
+        }
+        top_fifteen = {
+            "repeatCell": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startRowIndex": 4, "endRowIndex": 16,
+                    "startColumnIndex": 0, "endColumnIndex": 9
+                },
+                "cell": {"userEnteredFormat": {
+                    "backgroundColor": {
+                        "red": 0.8,
+                        "green": 0.8,
+                        "blue": 0.8
+                    }
+                }},
+                "fields": "userEnteredFormat.backgroundColor"
+            }
+        }
+        body["requests"].append(top_three)
+        body["requests"].append(top_fifteen)
+
+    @staticmethod
+    def _color_inactivity(df: DataFrame, body: dict, sheet_id: str):
+        indexes = df.index[df[ColumnIndex.INACTIVITY.value] != "0"].tolist()
+        for index in indexes:
+            inactivity = int(df[ColumnIndex.INACTIVITY.value][index])
+            print(f'{index} :: {inactivity}')
+            request = {
+                "repeatCell": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": index, "endRowIndex": index+1,
+                        "startColumnIndex": 8, "endColumnIndex": 9
+                    },
+                    "cell": {"userEnteredFormat": {
+                        "backgroundColor": {
+                            "red": 1,
+                            "green":  1 - (inactivity*0.11),
+                            "blue": 1 - (inactivity*0.11)
+
+                        }
+                    }},
+                    "fields": "userEnteredFormat.backgroundColor"
+                }
+            }
+            body["requests"].append(request)
+
+    def _clear_colors(self):
+        sheet_id = self.sheet_accessor.get_gc().get_worksheet(0).id
+        clear_format_request = {
+            "repeatCell": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startRowIndex": 0, "endRowIndex": 51,
+                    "startColumnIndex": 0, "endColumnIndex": 10
+                },
+                "cell": {"userEnteredFormat": {
+                    "backgroundColor": {
+                        "alpha": 0,
+                        "red": 1,
+                        "green": 1,
+                        "blue": 1
+                    }
+                }},
+                "fields": "userEnteredFormat.backgroundColor"
+            }
+        }
+        body = {
+            "requests": [clear_format_request]
+        }
+        self.sheet_accessor.get_gc().batch_update(body)
+
+
+    def _color_sheet(self):
+        sheet_id = self.sheet_accessor.get_gc().get_worksheet(0).id
+        body = {"requests": []}
+
+        df = self.sheet_accessor.get(index=0, first_column='A', last_column='I')
+
+        self._color_thresholds(df, body, sheet_id)
+        self._color_header(body, sheet_id)
+        self._color_roles(df, body, sheet_id)
+        self._color_inactivity(df, body, sheet_id)
+
+        self.sheet_accessor.get_gc().batch_update(body)
 
     def update_summary(self):
         df = self.__build_summary()
         df = self.__reorder(df)
+        ranks = [[i] for i in range(1, df.shape[0]+1)]
+        df = df[ColumnIndex.ordered_col_indexes()[1:]]
 
-        _range = f'A2:I'
+        _range = f'B2:I'
         _values = df.values.tolist()
 
-        ranks = []
-        for i in range(1, 51):
-            ranks.append([i])
+        self._clear_colors()
 
         self.sheet_accessor.get_gc().get_worksheet(0).clear()
         self.sheet_accessor.get_gc().get_worksheet(0).update(f'A1:I1', [ColumnIndex.ordered_col_indexes()])
         self.sheet_accessor.get_gc().get_worksheet(0).update(_range, _values, value_input_option='USER_ENTERED')
-        self.sheet_accessor.get_gc().get_worksheet(0).sort((6, 'des'), range='A2:G8')
+        self.sheet_accessor.get_gc().get_worksheet(0).sort((6, 'des'), range='A2:H51')
         self.sheet_accessor.get_gc().get_worksheet(0).update('A2:A51', ranks)
+
+        self._color_sheet()
 
         return f'{datetime.now()} : Updated Summary (Sheet #1)'
 
@@ -185,3 +331,5 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
         changes = self.__merge(changes, self.__check_role(df, Role.ELDER, 600, 6, 999))
         changes = self.__merge(changes, self.__check_role(df, Role.CO_LEADER, 900, 8, 999))
         return changes
+
+

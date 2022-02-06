@@ -1,2 +1,0 @@
-class SheetAccessor:
-    pass

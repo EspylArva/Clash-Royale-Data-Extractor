@@ -1,15 +1,16 @@
 import http.client
 import json
-from enum import Enum
+from aenum import Enum
 from pyxtension.streams import stream
 from src.SpreadsheetLoader import SpreadsheetLoader
 
 
-class Role(str, Enum):
-    MEMBER = "Membre"
-    ELDER = "Aîné"
-    CO_LEADER = "Adjoint"
-    LEADER = "Chef"
+class Role(Enum):
+    _init_ = "value r g b"
+    MEMBER = "Membre", 0.5, 0.9, 1
+    ELDER = "Aîné", 0.3, 0.6, 0.9
+    CO_LEADER = "Adjoint", 0.4, 0.8, 0.6
+    LEADER = "Chef", 0.2, 0.2, 0.5
 
     @staticmethod
     def get_french_function(function: str):
