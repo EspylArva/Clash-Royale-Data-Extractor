@@ -9,8 +9,8 @@ class Role(Enum):
     _init_ = "value r g b"
     MEMBER = "Membre", 0.5, 0.9, 1
     ELDER = "Aîné", 0.3, 0.6, 0.9
-    CO_LEADER = "Adjoint", 0.4, 0.8, 0.6
-    LEADER = "Chef", 0.2, 0.2, 0.5
+    CO_LEADER = "Adjoint", 0.1, 0.8, 0.4
+    LEADER = "Chef", 0.6, 0.4, 0.6
 
     @staticmethod
     def get_french_function(function: str):
