@@ -62,38 +62,22 @@ class SpreadsheetLoader:
         penultimate_offset = 1 if penultimate else 0
         return len(str_list) - penultimate_offset + 1
 
-    def change_color(self):
-        sheet_id = self.get_gc().get_worksheet(0).id
-        body = {
-            "requests": [
-                {"updateCells": {
-                    "range": {
-                        "sheetId": sheet_id,
-                        "startRowIndex": 0, "endRowIndex": 51,
-                        "startColumnIndex": 0, "endColumnIndex": 10
-                    },
-                    "rows": [{"values": [{"userEnteredFormat": {
-                        "backgroundColor": {
-                            "alpha": 0
-                        }
-                    }}]}],
-                    "fields": "userEnteredFormat.backgroundColor"
+    @staticmethod
+    def change_color(sheet_id, start_row, end_row, start_col, end_col, r=1, g=1, b=1):
+        return {
+            "repeatCell": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startRowIndex": start_row, "endRowIndex": end_row,
+                    "startColumnIndex": start_col, "endColumnIndex": end_col
+                },
+                "cell": {"userEnteredFormat": {
+                    "backgroundColor": {
+                        "red": r,
+                        "green": g,
+                        "blue": b
+                    }
                 }},
-                {"repeatCell": {
-                    "range": {
-                        "sheetId": sheet_id,
-                        "startRowIndex": 0, "endRowIndex": 7,
-                        "startColumnIndex": 0, "endColumnIndex": 1
-                    },
-                    "cell": {"userEnteredFormat": {
-                        "backgroundColor": {
-                            "red": 1
-                        }
-                    }},
-                    "fields": "userEnteredFormat.backgroundColor"
-                }}
-            ]
+                "fields": "userEnteredFormat.backgroundColor"
+            }
         }
-        self.get_gc().batch_update(body)
-
-        print("OK")

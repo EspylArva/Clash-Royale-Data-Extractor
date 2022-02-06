@@ -73,7 +73,6 @@ class DataExtractor:
             .toList()
 
 
-
 #function main() {
 #  updateCurrentPlayers(currentMembers); OK
 #  //updatePoints();

@@ -100,7 +100,9 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
         for i, row in df.iterrows():
             # noinspection PyTypeChecker
             points = f"""=IFERROR(VLOOKUP(B{i + 1};'Score de Guerre'!A2:C;3; FALSE);0) + IFERROR(VLOOKUP(B{i + 1};'Score de Bateau'!A2:C;3; FALSE);0)"""
+            # noinspection PyTypeChecker
             ratio = f'=IFERROR(ROUND($D{i + 1}/($E{i + 1}-2);0);0)'
+            # noinspection PyTypeChecker
             moyenne = f"""=IFERROR(ROUND($D{i+1} / COUNT(INDIRECT("'Score de Guerre'!F"&MATCH($B{i+1};'Score de Guerre'!A:A;0)&":O"&MATCH($B{i+1};'Score de Guerre'!A:A;0)));0);0)"""
             df.at[i, ColumnIndex.POINTS.value] = points
             df.at[i, ColumnIndex.RATIO.value] = ratio
@@ -109,23 +111,8 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
 
     @staticmethod
     def _color_header(body: dict, sheet_id: str):
-        request = {
-            "repeatCell": {
-                "range": {
-                    "sheetId": sheet_id,
-                    "startRowIndex": 0, "endRowIndex": 1,
-                    "startColumnIndex": 0, "endColumnIndex": 9
-                },
-                "cell": {"userEnteredFormat": {
-                    "backgroundColor": {
-                        "red": 0.4,
-                        "green": 0.2,
-                        "blue": 0.5
-                    }
-                }},
-                "fields": "userEnteredFormat.backgroundColor"
-            }
-        }
+        request = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=0, end_row=1,
+                                                 start_col=0, end_col=9, r=0.4, g=0.2, b=0.5)
         body["requests"].append(request)
         return
 
@@ -135,62 +122,17 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
             raw_indexes = df.index[df['Grade'] == role.value].tolist()
             for k, g in groupby(enumerate(raw_indexes), lambda ix: ix[0] - ix[1]):
                 indexes = list(map(itemgetter(1), g))
-                print(f'{role.value}: {indexes} -- {int(indexes[0]) + 1}|{int(indexes[-1]) + 2}')
-                request = {
-                    "repeatCell": {
-                        "range": {
-                            "sheetId": sheet_id,
-                            "startRowIndex": int(indexes[0]), "endRowIndex": int(indexes[-1]) + 1,
-                            "startColumnIndex": 2, "endColumnIndex": 3
-                        },
-                        "cell": {"userEnteredFormat": {
-                            "backgroundColor": {
-                                "red": role.r,
-                                "green": role.g,
-                                "blue": role.b
-                            }
-                        }},
-                        "fields": "userEnteredFormat.backgroundColor"
-                    }
-                }
+                request = SpreadsheetLoader.change_color(sheet_id=sheet_id,
+                                                         start_row=int(indexes[0]), end_row=int(indexes[-1]) + 1,
+                                                         start_col=2, end_col=3, r=role.r, g=role.g, b=role.b)
                 body["requests"].append(request)
 
     @staticmethod
     def _color_thresholds(df: DataFrame, body: dict, sheet_id: str):
-        top_three = {
-            "repeatCell": {
-                "range": {
-                    "sheetId": sheet_id,
-                    "startRowIndex": 1, "endRowIndex": 4,
-                    "startColumnIndex": 0, "endColumnIndex": 9
-                },
-                "cell": {"userEnteredFormat": {
-                    "backgroundColor": {
-                        "red": 1,
-                        "green": 1,
-                        "blue": 0.3
-                    }
-                }},
-                "fields": "userEnteredFormat.backgroundColor"
-            }
-        }
-        top_fifteen = {
-            "repeatCell": {
-                "range": {
-                    "sheetId": sheet_id,
-                    "startRowIndex": 4, "endRowIndex": 16,
-                    "startColumnIndex": 0, "endColumnIndex": 9
-                },
-                "cell": {"userEnteredFormat": {
-                    "backgroundColor": {
-                        "red": 0.8,
-                        "green": 0.8,
-                        "blue": 0.8
-                    }
-                }},
-                "fields": "userEnteredFormat.backgroundColor"
-            }
-        }
+        top_three = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=1, end_row=4,
+                                                   start_col=0, end_col=9, r=1, g=1, b=0.3)
+        top_fifteen = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=4, end_row=16,
+                                                     start_col=0, end_col=9, r=0.9, g=0.9, b=0.9)
         body["requests"].append(top_three)
         body["requests"].append(top_fifteen)
 
@@ -198,26 +140,10 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
     def _color_inactivity(df: DataFrame, body: dict, sheet_id: str):
         indexes = df.index[df[ColumnIndex.INACTIVITY.value] != "0"].tolist()
         for index in indexes:
-            inactivity = int(df[ColumnIndex.INACTIVITY.value][index])
-            print(f'{index} :: {inactivity}')
-            request = {
-                "repeatCell": {
-                    "range": {
-                        "sheetId": sheet_id,
-                        "startRowIndex": index, "endRowIndex": index+1,
-                        "startColumnIndex": 8, "endColumnIndex": 9
-                    },
-                    "cell": {"userEnteredFormat": {
-                        "backgroundColor": {
-                            "red": 1,
-                            "green":  1 - (inactivity*0.11),
-                            "blue": 1 - (inactivity*0.11)
-
-                        }
-                    }},
-                    "fields": "userEnteredFormat.backgroundColor"
-                }
-            }
+            gb_levels = 1 - (int(df[ColumnIndex.INACTIVITY.value][index])*0.11)
+            request = SpreadsheetLoader.change_color(sheet_id=sheet_id,
+                                                     start_row=index, end_row=index + 1,
+                                                     start_col=8, end_col=9, r=1, g=gb_levels, b=gb_levels)
             body["requests"].append(request)
 
     def _clear_colors(self):
