@@ -23,8 +23,10 @@ if __name__ == '__main__':
     # TODO : Totaux sur page 2 et 3
     # loader.change_color()
 
+    # warlogs_manager.test()
+
     root = Tk()
-    root.iconbitmap('./../resources/icon.ico')
+    root.iconbitmap('./resources/icon.ico')
     gui = GUI(root, summary_manager, warlogs_manager)
     root.mainloop()
 

@@ -4,6 +4,7 @@ from itertools import groupby
 from operator import itemgetter
 
 import pandas as pd
+from gspread.exceptions import APIError
 from pandas import DataFrame
 
 from src import ClashRoyaleAPI
@@ -119,7 +120,7 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
     @staticmethod
     def _color_roles(df: DataFrame, body: dict, sheet_id: str):
         for role in list(Role):
-            raw_indexes = df.index[df['Grade'] == role.value].tolist()
+            raw_indexes = df.index[df[ColumnIndex.RANK.value] == role.value].tolist()
             for k, g in groupby(enumerate(raw_indexes), lambda ix: ix[0] - ix[1]):
                 indexes = list(map(itemgetter(1), g))
                 request = SpreadsheetLoader.change_color(sheet_id=sheet_id,
@@ -171,7 +172,6 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
         }
         self.sheet_accessor.get_gc().batch_update(body)
 
-
     def _color_sheet(self):
         sheet_id = self.sheet_accessor.get_gc().get_worksheet(0).id
         body = {"requests": []}
@@ -186,25 +186,29 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
         self.sheet_accessor.get_gc().batch_update(body)
 
     def update_summary(self):
-        df = self.__build_summary()
-        df = self.__reorder(df)
-        ranks = [[i] for i in range(1, df.shape[0]+1)]
-        df = df[ColumnIndex.ordered_col_indexes()[1:]]
+        try:
+            df = self.__build_summary()
+            df = self.__reorder(df)
+            ranks = [[i] for i in range(1, df.shape[0]+1)]
+            df = df[ColumnIndex.ordered_col_indexes()[1:]]
 
-        _range = f'B2:I'
-        _values = df.values.tolist()
+            _range = f'B2:I'
+            _values = df.values.tolist()
 
-        self._clear_colors()
+            self._clear_colors()
 
-        self.sheet_accessor.get_gc().get_worksheet(0).clear()
-        self.sheet_accessor.get_gc().get_worksheet(0).update(f'A1:I1', [ColumnIndex.ordered_col_indexes()])
-        self.sheet_accessor.get_gc().get_worksheet(0).update(_range, _values, value_input_option='USER_ENTERED')
-        self.sheet_accessor.get_gc().get_worksheet(0).sort((6, 'des'), range='A2:H51')
-        self.sheet_accessor.get_gc().get_worksheet(0).update('A2:A51', ranks)
+            self.sheet_accessor.get_gc().get_worksheet(0).clear()
+            self.sheet_accessor.get_gc().get_worksheet(0).update(f'A1:I1', [ColumnIndex.ordered_col_indexes()])
+            self.sheet_accessor.get_gc().get_worksheet(0).update(_range, _values, value_input_option='USER_ENTERED')
+            self.sheet_accessor.get_gc().get_worksheet(0).sort((6, 'des'), range='A2:H51')
+            self.sheet_accessor.get_gc().get_worksheet(0).update('A2:A51', ranks)
 
-        self._color_sheet()
+            self._color_sheet()
 
-        return f'{datetime.now()} : Updated Summary (Sheet #1)'
+            return f'{datetime.now()} : Updated Summary (Sheet #1)'
+        except APIError:
+            return "Error. Try in a few minutes."
+
 
     @staticmethod
     def __merge(dict1: dict, dict2: dict):
@@ -251,11 +255,15 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
                                                     ║  leader(1)  ║
                                                     ╚═════════════╝
         """
-        df = self.sheet_accessor.get(index=0, last_column="I")
+        try:
+            df = self.sheet_accessor.get(index=0, last_column="I")
 
-        changes = self.__check_role(df, Role.MEMBER, 300, 4, 15)
-        changes = self.__merge(changes, self.__check_role(df, Role.ELDER, 600, 6, 999))
-        changes = self.__merge(changes, self.__check_role(df, Role.CO_LEADER, 900, 8, 999))
-        return changes
+            changes = self.__check_role(df, Role.MEMBER, 300, 4, 15)
+            changes = self.__merge(changes, self.__check_role(df, Role.ELDER, 600, 6, 999))
+            changes = self.__merge(changes, self.__check_role(df, Role.CO_LEADER, 900, 8, 999))
+            return changes
+
+        except APIError:
+            return "Error. Try in a few minutes."
 
 

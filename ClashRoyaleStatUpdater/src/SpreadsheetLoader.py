@@ -28,14 +28,16 @@ class SpreadsheetLoaderSettings:
 class SpreadsheetLoader:
     def __init__(self, settings: SpreadsheetLoaderSettings):
         self.settings = settings
+        self.gc = None
 
     def get_gc(self):
-        # Read the .json file and authenticate with the links
-        info = json.loads(self.settings.auth)
-        credentials = Credentials.from_service_account_info(info, scopes=gspread.auth.DEFAULT_SCOPES)
-        # Request authorization and open the selected spreadsheet
-        gc = gspread.authorize(credentials).open_by_key(self.settings.sheet_id)
-        return gc
+        if self.gc is None:
+            # Read the .json file and authenticate with the links
+            info = json.loads(self.settings.auth)
+            credentials = Credentials.from_service_account_info(info, scopes=gspread.auth.DEFAULT_SCOPES)
+            # Request authorization and open the selected spreadsheet
+            self.gc = gspread.authorize(credentials).open_by_key(self.settings.sheet_id)
+        return self.gc
 
     def get(self, index=-1, first_column="A", last_column="I"):
         gc = self.get_gc()

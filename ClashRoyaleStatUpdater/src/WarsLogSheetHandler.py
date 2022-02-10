@@ -1,8 +1,10 @@
+import time
 from datetime import datetime
 from enum import Enum
 from itertools import groupby
 from operator import itemgetter
 
+from gspread.exceptions import APIError
 from pandas import DataFrame
 
 from src import ClashRoyaleAPI
@@ -87,7 +89,6 @@ class WarLogsManager(ClashRoyaleAPI.DataExtractor):
         df = self.__update_members_role(df=df)
         df = self.__fetch_boat_results(df=df)
 
-
         for i, row in df.iterrows():
             # noinspection PyTypeChecker
             total = f'=SUM($F{i + 2}:$O{i + 2}) * 60'
@@ -156,27 +157,120 @@ class WarLogsManager(ClashRoyaleAPI.DataExtractor):
             body["requests"].append(request)
         self.sheet_accessor.get_gc().batch_update(body)
 
+    def _clear_colors(self, sheet_index: int, df: DataFrame):
+        row_count, col_count = df.shape
+
+        sheet_id = self.sheet_accessor.get_gc().get_worksheet(sheet_index).id
+        clear_format_request = {
+            "repeatCell": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startRowIndex": 0, "endRowIndex": row_count,
+                    "startColumnIndex": 0, "endColumnIndex": col_count
+                },
+                "cell": {"userEnteredFormat": {
+                    "backgroundColor": {
+                        "alpha": 0,
+                        "red": 1,
+                        "green": 1,
+                        "blue": 1
+                    }
+                }},
+                "fields": "userEnteredFormat.backgroundColor"
+            }
+        }
+        body = {
+            "requests": [clear_format_request]
+        }
+        self.sheet_accessor.get_gc().batch_update(body)
+
+    def highlight_zeroes(self, sheet_index: int, df: DataFrame):
+        self._clear_colors(sheet_index, df)
+        sheet_id = self.sheet_accessor.get_gc().get_worksheet(sheet_index).id
+        body = {"requests": []}
+
+        r, g, b = (0.35, 0.35, 0.35)
+        if sheet_index == 1:
+            r = 0.8
+        elif sheet_index == 2:
+            g = 0.8
+
+        for i, col in df.items():
+            col_index = df.columns.get_loc(i)
+            if col_index > 4:
+                zeroes = []
+                if sheet_index == 1:
+                    zeroes = col.where(col == 0).dropna().keys()
+                elif sheet_index == 2:
+                    zeroes = col.where((col != 0) & (col != "")).dropna().keys()
+                for k, gr in groupby(enumerate(zeroes), lambda ix: ix[0] - ix[1]):
+                    indexes = list(map(itemgetter(1), gr))
+                    request = SpreadsheetLoader.change_color(sheet_id=sheet_id,
+                                                             start_row=int(indexes[0]+1), end_row=int(indexes[-1]) + 2,
+                                                             start_col=col_index, end_col=col_index+1, r=r, g=g, b=b)
+                    body["requests"].append(request)
+        for role in list(Role):
+            raw_indexes = df.index[df[ColumnIndex.ROLE.value] == role.value].tolist()
+            for k, gr in groupby(enumerate(raw_indexes), lambda ix: ix[0] - ix[1]):
+                indexes = list(map(itemgetter(1), gr))
+                role_request = SpreadsheetLoader.change_color(sheet_id=sheet_id,
+                                                              start_row=int(indexes[0]+1), end_row=int(indexes[-1]) + 2,
+                                                              start_col=4, end_col=5, r=role.r, g=role.g, b=role.b)
+                body["requests"].append(role_request)
+        header_request = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=0, end_row=1,
+                                                        start_col=0, end_col=df.shape[1], r=0.4, g=0.2, b=0.5)
+        body["requests"].append(header_request)
+        self.sheet_accessor.get_gc().batch_update(body)
+
     def update_war_results(self):
-        df = self.get_war_sheet_update()
-        _range = f'A2:{chr(ord("A") + df.shape[1] - 1)}'
-        _values = df.values.tolist()
+        try:
+            df = self.get_war_sheet_update()
+            _range = f'A2:{chr(ord("A") + df.shape[1] - 1)}'
+            _values = df.values.tolist()
 
-        self.sheet_accessor.get_gc().get_worksheet(1).update(f'A1:{chr(ord("A") + df.shape[1] - 1)}1',
-                                                             [df.keys().tolist()])
-        self.sheet_accessor.get_gc().get_worksheet(1).update(_range, _values, value_input_option='USER_ENTERED')
-        self.__hide_non_members(df.index[df['Grade'] == ""].tolist(), sheet_index=1)
+            self.highlight_zeroes(1, df)
 
-        return f'{datetime.now()} : Updated War Logs (Sheet #2)'
+            self.sheet_accessor.get_gc().get_worksheet(1).update(f'A1:{chr(ord("A") + df.shape[1] - 1)}1',
+                                                                 [df.keys().tolist()])
+            self.sheet_accessor.get_gc().get_worksheet(1).update(_range, _values, value_input_option='USER_ENTERED')
+            self.__hide_non_members(df.index[df['Grade'] == ""].tolist(), sheet_index=1)
+
+            return f'{datetime.now()} : Updated War Logs (Sheet #2)'
+        except APIError:
+            # time.sleep(60)
+            # self.update_war_results()
+            return "Error. Try in a few minutes."
+
+    def test(self):
+        df = self.get_boat_sheet_update()
+
+        total_row = ["", "Total", "=SUM(C3:C)", "=SUM(D3:D)", ""]
+        for i in range(5, df.shape[1]):
+            total_row.append(f'=SUM({chr(ord("A") + i)}3:{chr(ord("A") + i)})')
+        print(total_row)
 
     def update_boat_results(self):
-        df = self.get_boat_sheet_update()
-        _range = f'A2:{chr(ord("A") + df.shape[1] - 1)}'
-        _values = df.values.tolist()
+        try:
+            df = self.get_boat_sheet_update()
 
-        self.sheet_accessor.get_gc().get_worksheet(2).update(f'A1:{chr(ord("A") + df.shape[1] - 1)}1',
-                                                             [df.keys().tolist()])
-        self.sheet_accessor.get_gc().get_worksheet(2).update(_range, _values, value_input_option='USER_ENTERED')
+            # total_row = ["", "Total", "=SUM(C3:C)", "=SUM(D3:D)", ""]
+            # for i in range(5, df.shape[1]):
+            #     total_row.append(f'=SUM({chr(ord("A") + i)}3:{chr(ord("A") + i)})')
+            # df.loc[-1] = total_row  # adding a row
+            # df.index = df.index + 1  # shifting index
+            # df = df.sort_index()  # sorting by index
 
-        self.__hide_non_members(df.index[df['Grade'] == ""].tolist(), sheet_index=2)
+            _range = f'A2:{chr(ord("A") + df.shape[1] - 1)}'  # Fixme: if inserting total, will need to shift A2 to A3
+            _values = df.values.tolist()
 
-        return f'{datetime.now()} : Updated Boat Attacks (Sheet #3)'
+            self.highlight_zeroes(2, df)
+
+            self.sheet_accessor.get_gc().get_worksheet(2).update(f'A1:{chr(ord("A") + df.shape[1] - 1)}1',
+                                                                 [df.keys().tolist()])
+            self.sheet_accessor.get_gc().get_worksheet(2).update(_range, _values, value_input_option='USER_ENTERED')
+
+            self.__hide_non_members(df.index[(df[ColumnIndex.ROLE.value] == "")].tolist(), sheet_index=2)  #  & (df[ColumnIndex.ROLE.value] != "Total")
+
+            return f'{datetime.now()} : Updated Boat Attacks (Sheet #3)'
+        except APIError:
+            return "Error. Try in a few minutes."

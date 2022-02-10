@@ -27,7 +27,7 @@ class Role(Enum):
 
 
 class ApiConnectionManager:
-    TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6IjAwM2ZmZTU0LTRlNGQtNGYzZi1iODA5LTlhM2MxYzA3MDdkNiIsImlhdCI6MTYzNzU5MTM0NSwic3ViIjoiZGV2ZWxvcGVyLzBhN2ZjMTg1LWZmMmEtMThjMC1iNTFlLWY3MmMyZmM3MzJmMSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyIxOTIuNTQuMTQ1LjE0MyIsIjEyOC4xMjguMTI4LjEyOCIsIjkzLjI2LjY2LjE1NSJdLCJ0eXBlIjoiY2xpZW50In1dfQ.dzY8ytb12EGdw_AJs8El9oPnE-9vs6boTXxwR9IUabLksyBNfxDwxcQQ22aEjHa85IA3qNgw6tDLtt1KFfbqsw"
+    TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImI5ODlmN2QzLTk1YzEtNDMwNi04NzI2LTA3OGE0OWM3YjdlOCIsImlhdCI6MTY0NDUyODE5OSwic3ViIjoiZGV2ZWxvcGVyLzBhN2ZjMTg1LWZmMmEtMThjMC1iNTFlLWY3MmMyZmM3MzJmMSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI0NS43OS4yMTguNzkiXSwidHlwZSI6ImNsaWVudCJ9XX0.lTmsmkIH3H6V0Q2Q_eYLs5pDLTVAZpZUsUlF-vW_NIXtXh7MDC9VkqN94byH5GK8kndBPjZqkjKVLsPndP8I-A"
     CLAN_ID = "8YJPUR"
     OFFICIAL_API_URL = "api.clashroyale.com"
     PROXY_API_URL = "proxy.royaleapi.dev"
@@ -69,7 +69,7 @@ class DataExtractor:
 
     def _get_wars_log(self):
         return stream(self.war_data["items"])\
-            .map(lambda season: {"id": f'{season["seasonId"]}:{season["sectionIndex"]}', "war_record": stream(season["standings"]).filter(lambda clan: clan["clan"]["tag"] == f'#{self.clan_id}').toList()[0]})\
+            .map(lambda season: {"id": f'{season["seasonId"]}:{int(season["sectionIndex"])+1}', "war_record": stream(season["standings"]).filter(lambda clan: clan["clan"]["tag"] == f'#{self.clan_id}').toList()[0]})\
             .toList()
 
 
