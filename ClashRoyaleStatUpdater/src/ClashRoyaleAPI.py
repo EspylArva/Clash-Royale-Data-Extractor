@@ -3,6 +3,7 @@ import json
 from aenum import Enum
 from pyxtension.streams import stream
 from SpreadsheetLoader import SpreadsheetLoader
+import os
 
 
 class Role(Enum):
@@ -32,7 +33,8 @@ class ApiConnectionManager:
     PROXY_API_URL = "proxy.royaleapi.dev"
 
     def __init__(self):
-        with open('resources/cr-api-key.txt', 'r') as file:
+        filename = './resources/cr-api-key.txt'
+        with open(filename, 'r') as file:
             self.token = file.read()
             self.conn = http.client.HTTPSConnection(self.PROXY_API_URL)
             self.headers = {'Authorization': 'Bearer {0}'.format(self.token)}

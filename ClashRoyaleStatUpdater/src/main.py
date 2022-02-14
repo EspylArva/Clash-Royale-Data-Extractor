@@ -1,3 +1,5 @@
+import os
+
 from SpreadsheetLoader import SpreadsheetLoader, SpreadsheetLoaderSettings
 import pandas as pd
 from tkinter import Tk
@@ -5,10 +7,13 @@ from ClashRoyaleAPI import ApiConnectionManager
 import SummarySheetHandler
 import WarsLogSheetHandler
 from GUI import GUI
+import os
 
 if __name__ == '__main__':
-    with open('resources/google-api-key.txt', 'r') as file:
+    filename = './resources/google-api-key.txt'
+    with open(filename, 'r') as file:
         data = file.read()
+        fd = open(filename, 'rb')
 
         pd.set_option('display.width', None)
         pd.set_option('display.max_columns', None)

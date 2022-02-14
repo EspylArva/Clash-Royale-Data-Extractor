@@ -3,11 +3,12 @@
 
 block_cipher = None
 
+added_files = ['./resources', 'resources']
 
 a = Analysis(['src\\main.py'],
              pathex=[],
              binaries=[],
-             datas=[],
+             datas=[added_files],
              hiddenimports=['pyxtension'],
              hookspath=[],
              hooksconfig={},
