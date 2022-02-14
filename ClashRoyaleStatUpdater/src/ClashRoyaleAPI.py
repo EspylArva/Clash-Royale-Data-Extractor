@@ -2,7 +2,7 @@ import http.client
 import json
 from aenum import Enum
 from pyxtension.streams import stream
-from src.SpreadsheetLoader import SpreadsheetLoader
+from SpreadsheetLoader import SpreadsheetLoader
 
 
 class Role(Enum):

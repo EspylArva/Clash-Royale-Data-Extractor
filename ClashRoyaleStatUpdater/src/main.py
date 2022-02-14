@@ -1,13 +1,9 @@
-import datetime
-import os
-import tkinter
-
 from SpreadsheetLoader import SpreadsheetLoader, SpreadsheetLoaderSettings
-
 import pandas as pd
 from tkinter import Tk
 from ClashRoyaleAPI import ApiConnectionManager
-from src import SummarySheetHandler, WarsLogSheetHandler
+import SummarySheetHandler
+import WarsLogSheetHandler
 from GUI import GUI
 
 if __name__ == '__main__':
@@ -26,7 +22,7 @@ if __name__ == '__main__':
     # warlogs_manager.test()
 
     root = Tk()
-    root.iconbitmap('./resources/icon.ico')
+    root.iconbitmap('./../resources/icon.ico')
     gui = GUI(root, summary_manager, warlogs_manager)
     root.mainloop()
 

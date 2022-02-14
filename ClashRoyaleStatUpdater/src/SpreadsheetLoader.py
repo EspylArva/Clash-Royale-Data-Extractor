@@ -2,7 +2,6 @@ import pandas as pd
 from google.oauth2.service_account import Credentials
 import gspread
 import json
-from gspread import Worksheet
 
 default_sheet_id = "1kZ9XdRK1cB3DGuFgKxGk6CrqjeJ3s5vn4QndPet2PDQ"
 default_auth = '''{

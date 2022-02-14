@@ -7,9 +7,9 @@ import pandas as pd
 from gspread.exceptions import APIError
 from pandas import DataFrame
 
-from src import ClashRoyaleAPI
-from src.ClashRoyaleAPI import Role, ApiConnectionManager
-from src.SpreadsheetLoader import SpreadsheetLoader
+import ClashRoyaleAPI
+from ClashRoyaleAPI import Role, ApiConnectionManager
+from SpreadsheetLoader import SpreadsheetLoader
 
 
 class ColumnIndex(str, Enum):
@@ -132,10 +132,10 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
     def _color_thresholds(df: DataFrame, body: dict, sheet_id: str):
         top_three = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=1, end_row=4,
                                                    start_col=0, end_col=9, r=1, g=1, b=0.3)
-        top_fifteen = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=4, end_row=16,
-                                                     start_col=0, end_col=9, r=0.9, g=0.9, b=0.9)
+        top_twenty = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=4, end_row=21,
+                                                    start_col=0, end_col=9, r=0.9, g=0.9, b=0.9)
         body["requests"].append(top_three)
-        body["requests"].append(top_fifteen)
+        body["requests"].append(top_twenty)
 
     @staticmethod
     def _color_inactivity(df: DataFrame, body: dict, sheet_id: str):

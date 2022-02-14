@@ -7,11 +7,11 @@ from operator import itemgetter
 from gspread.exceptions import APIError
 from pandas import DataFrame
 
-from src import ClashRoyaleAPI
+import ClashRoyaleAPI
 import pandas as pd
 
-from src.ClashRoyaleAPI import Role, ApiConnectionManager
-from src.SpreadsheetLoader import SpreadsheetLoader
+from ClashRoyaleAPI import Role, ApiConnectionManager
+from SpreadsheetLoader import SpreadsheetLoader
 
 
 class ColumnIndex(str, Enum):

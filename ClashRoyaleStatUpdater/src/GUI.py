@@ -1,16 +1,11 @@
 import tkinter
-from tkinter import Tk, LEFT, END
-from tkinter import Label, Text  # Labels
-from tkinter import Entry, StringVar  # Text fields
-from tkinter import Button  # Buttons
-from tkinter import Checkbutton, BooleanVar  # Checkboxes
+from tkinter import Tk, END
+from tkinter import Button
 from tkinter.scrolledtext import ScrolledText
-from pandas import DataFrame
-
 import json
 
-from src.SummarySheetHandler import SummaryManager
-from src.WarsLogSheetHandler import WarLogsManager
+from SummarySheetHandler import SummaryManager
+from WarsLogSheetHandler import WarLogsManager
 
 
 def format_json(string: str):
