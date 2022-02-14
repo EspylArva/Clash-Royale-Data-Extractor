@@ -7,23 +7,27 @@ import WarsLogSheetHandler
 from GUI import GUI
 
 if __name__ == '__main__':
-    pd.set_option('display.width', None)
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.max_rows', None)
+    with open('resources/google-api-key.txt', 'r') as file:
+        data = file.read()
 
-    loader = SpreadsheetLoader(settings=SpreadsheetLoaderSettings())
-    api_connection_manager = ApiConnectionManager()
+        pd.set_option('display.width', None)
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.max_rows', None)
 
-    summary_manager = SummarySheetHandler.SummaryManager(api_connection_manager, loader)
-    warlogs_manager = WarsLogSheetHandler.WarLogsManager(api_connection_manager, loader)
-    # TODO : Totaux sur page 2 et 3
-    # loader.change_color()
+        loader = SpreadsheetLoader(settings=SpreadsheetLoaderSettings(data))
+        api_connection_manager = ApiConnectionManager()
 
-    # warlogs_manager.test()
+        summary_manager = SummarySheetHandler.SummaryManager(api_connection_manager, loader)
+        warlogs_manager = WarsLogSheetHandler.WarLogsManager(api_connection_manager, loader)
+        # TODO : Totaux sur page 2 et 3
+        # loader.change_color()
 
-    root = Tk()
-    root.iconbitmap('./../resources/icon.ico')
-    gui = GUI(root, summary_manager, warlogs_manager)
-    root.mainloop()
+        # warlogs_manager.test()
 
+        root = Tk()
+        root.iconbitmap('resources/icon.ico')
+        gui = GUI(root, summary_manager, warlogs_manager)
+        root.mainloop()
+
+        # pyinstaller --onefile --noconsole src/main.py -i ./resources/icon.ico --hidden-import pyxtension
 

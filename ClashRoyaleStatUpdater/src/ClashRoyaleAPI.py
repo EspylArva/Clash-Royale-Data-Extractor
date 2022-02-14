@@ -27,16 +27,17 @@ class Role(Enum):
 
 
 class ApiConnectionManager:
-    TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImI5ODlmN2QzLTk1YzEtNDMwNi04NzI2LTA3OGE0OWM3YjdlOCIsImlhdCI6MTY0NDUyODE5OSwic3ViIjoiZGV2ZWxvcGVyLzBhN2ZjMTg1LWZmMmEtMThjMC1iNTFlLWY3MmMyZmM3MzJmMSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI0NS43OS4yMTguNzkiXSwidHlwZSI6ImNsaWVudCJ9XX0.lTmsmkIH3H6V0Q2Q_eYLs5pDLTVAZpZUsUlF-vW_NIXtXh7MDC9VkqN94byH5GK8kndBPjZqkjKVLsPndP8I-A"
     CLAN_ID = "8YJPUR"
     OFFICIAL_API_URL = "api.clashroyale.com"
     PROXY_API_URL = "proxy.royaleapi.dev"
 
     def __init__(self):
-        self.conn = http.client.HTTPSConnection(self.PROXY_API_URL)
-        self.headers = {'Authorization': 'Bearer {0}'.format(self.TOKEN)}
-        self.WAR_LOG_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/riverracelog"
-        self.MEMBERS_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/members"
+        with open('resources/cr-api-key.txt', 'r') as file:
+            self.token = file.read()
+            self.conn = http.client.HTTPSConnection(self.PROXY_API_URL)
+            self.headers = {'Authorization': 'Bearer {0}'.format(self.token)}
+            self.WAR_LOG_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/riverracelog"
+            self.MEMBERS_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/members"
 
     def get_war_data(self):
         self.conn.request("GET", self.WAR_LOG_ENDPOINT, None, self.headers)
