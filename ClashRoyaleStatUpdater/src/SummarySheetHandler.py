@@ -2,10 +2,11 @@ from datetime import datetime
 from enum import Enum
 
 import pandas as pd
+from gspread.exceptions import APIError
 from pandas import DataFrame
 
 from src import ClashRoyaleAPI
-from src.ClashRoyaleAPI import Role, ApiConnectionManager
+from src.ClashRoyaleAPI import ApiConnectionManager, Role
 from src.SpreadsheetLoader import SpreadsheetLoader
 
 
@@ -71,17 +72,17 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
             tags.append(member["tag"])
             inactivity.append(inactivities.get(member["tag"], 0))
         df = DataFrame({
-            ColumnIndex.NAME.value: pseudos,
-            ColumnIndex.ROLE.value: grades,
+            ColumnIndex.NAME.value        : pseudos,
+            ColumnIndex.ROLE.value        : grades,
             ColumnIndex.CASTLE_LEVEL.value: niveaux_chateau,
-            ColumnIndex.TAG.value: tags,
-            ColumnIndex.INACTIVITY.value: inactivity
+            ColumnIndex.TAG.value         : tags,
+            ColumnIndex.INACTIVITY.value  : inactivity
         })
 
         df = self.__import_war_results(df=df)
 
         row_count = df.shape[0]
-        df = df.rename(columns={"Total": ColumnIndex.POINTS.value})
+        df = df.rename(columns={ "Total": ColumnIndex.POINTS.value })
         # noinspection PyTypeChecker
         df.insert(0, ColumnIndex.RATIO.value, [0] * row_count)
         # noinspection PyTypeChecker
@@ -108,7 +109,7 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
             # noinspection PyTypeChecker
             points = f"""=IFERROR(VLOOKUP(B{i + 1};'Score de Guerre'!A2:C;3; FALSE);0) + IFERROR(VLOOKUP(B{i + 1};'Score de Bateau'!A2:C;3; FALSE);0)"""
             ratio = f'=IFERROR(ROUND($D{i + 1}/($E{i + 1}-2);0);0)'
-            moyenne = f"""=IFERROR(ROUND($D{i+1} / COUNT(INDIRECT("'Score de Guerre'!F"&MATCH($B{i+1};'Score de Guerre'!A:A;0)&":O"&MATCH($B{i+1};'Score de Guerre'!A:A;0)));0);0)"""
+            moyenne = f"""=IFERROR(ROUND($D{i + 1} / COUNT(INDIRECT("'Score de Guerre'!F"&MATCH($B{i + 1};'Score de Guerre'!A:A;0)&":O"&MATCH($B{i + 1};'Score de Guerre'!A:A;0)));0);0)"""
             df.at[i, ColumnIndex.POINTS.value] = points
             df.at[i, ColumnIndex.RATIO.value] = ratio
             df.at[i, ColumnIndex.AVERAGE.value] = moyenne
@@ -136,13 +137,13 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
 
     @staticmethod
     def __merge(dict1: dict, dict2: dict):
-        return {"promotion": dict1["promotion"] + dict2["promotion"],
-                "retrogradation": dict1["retrogradation"] + dict2["retrogradation"]}
+        return { "promotion"     : dict1["promotion"] + dict2["promotion"],
+                 "retrogradation": dict1["retrogradation"] + dict2["retrogradation"] }
 
     @staticmethod
     def __check_role(df: DataFrame, role: Role, exclusion_threshold: int, promotion_threshold: int,
                      inactivity_threshold: int):
-        map_changes = {"promotion": [], "retrogradation": []}
+        map_changes = { "promotion": [], "retrogradation": [] }
         for i, member in df.iterrows():
             if member["Grade"] == role.value:
                 points = int(member["Points de clan"]) if member["Points de clan"] != "" else 0
@@ -151,10 +152,10 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
 
                 if points < exclusion_threshold or inactivity > inactivity_threshold:
                     map_changes["retrogradation"].append(
-                        f'{member["Pseudo"]} (participation: {points} (<{exclusion_threshold}) or inactivity: {inactivity} (>{inactivity_threshold}))')
+                            f'{member["Pseudo"]} (participation: {points} (<{exclusion_threshold}) or inactivity: {inactivity} (>{inactivity_threshold}))')
                 elif int(member["Rang"]) <= promotion_threshold:
                     map_changes["promotion"].append(
-                        f'{member["Pseudo"]} (scored {points}, and ranked {member["Rang"]}')
+                            f'{member["Pseudo"]} (scored {points}, and ranked {member["Rang"]}')
         return map_changes
 
     def analyse_roles(self):
@@ -179,9 +180,12 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
                                                     ║  leader(1)  ║
                                                     ╚═════════════╝
         """
-        df = self.sheet_accessor.get(index=0, last_column="I")
+        try:
+            df = self.sheet_accessor.get(index=0, last_column="I")
 
-        changes = self.__check_role(df, Role.MEMBER, 300, 4, 15)
-        changes = self.__merge(changes, self.__check_role(df, Role.ELDER, 600, 6, 999))
-        changes = self.__merge(changes, self.__check_role(df, Role.CO_LEADER, 900, 8, 999))
-        return changes
+            changes = self.__check_role(df, Role.MEMBER, 300, 4, 15)
+            changes = self.__merge(changes, self.__check_role(df, Role.ELDER, 600, 6, 999))
+            changes = self.__merge(changes, self.__check_role(df, Role.CO_LEADER, 900, 8, 999))
+            return changes
+        except APIError:
+            return "Error. Try in a few minutes."
