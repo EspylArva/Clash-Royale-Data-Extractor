@@ -19,8 +19,6 @@ if __name__ == '__main__':
     summary_manager = SummarySheetHandler.SummaryManager(api_connection_manager, loader)
     warlogs_manager = WarsLogSheetHandler.WarLogsManager(api_connection_manager, loader)
 
-    print(os.getcwd())
-
     root = Tk()
     root.iconbitmap('./../resources/icon.ico')
     # root.tk.call('wm', 'iconphoto', root._w, tkinter.PhotoImage(file='./../resources/icon.ico'))
