@@ -19,8 +19,6 @@ if __name__ == '__main__':
     summary_manager = SummarySheetHandler.SummaryManager(api_connection_manager, loader)
     warlogs_manager = WarsLogSheetHandler.WarLogsManager(api_connection_manager, loader)
 
-    # TODO : Totaux sur page 2 et 3
-
     print(os.getcwd())
 
     root = Tk()
@@ -30,3 +28,8 @@ if __name__ == '__main__':
     root.mainloop()
 
     # pyinstaller --onefile --noconsole src/main.py -i ./resources/icon.ico --hidden-import pyxtension
+
+    # TODO : Totaux sur page 2 et 3
+    # TODO : horodatage de la dernière utilisation
+    # TODO : Historiques des guerres
+    # Search points on tag

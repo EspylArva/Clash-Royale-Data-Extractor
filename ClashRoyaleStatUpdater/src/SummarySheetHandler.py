@@ -107,7 +107,8 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
         df = df.fillna(0)
         for i, row in df.iterrows():
             # noinspection PyTypeChecker
-            points = f"""=IFERROR(VLOOKUP(B{i + 1};'Score de Guerre'!A2:C;3; FALSE);0) + IFERROR(VLOOKUP(B{i + 1};'Score de Bateau'!A2:C;3; FALSE);0)"""
+            points = f"""=IFERROR(VLOOKUP(H{i + 1};'Score de Guerre'!B2:C;2; FALSE);0) + IFERROR(VLOOKUP(H{i + 1};'Score de Bateau'!B2:C;2; FALSE);0)"""
+            # noinspection PyTypeChecker
             ratio = f'=IFERROR(ROUND($D{i + 1}/($E{i + 1}-2);0);0)'
             moyenne = f"""=IFERROR(ROUND($D{i + 1} / COUNT(INDIRECT("'Score de Guerre'!F"&MATCH($B{i + 1};'Score de Guerre'!A:A;0)&":O"&MATCH($B{i + 1};'Score de Guerre'!A:A;0)));0);0)"""
             df.at[i, ColumnIndex.POINTS.value] = points

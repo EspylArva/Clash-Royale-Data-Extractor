@@ -56,8 +56,7 @@ class WarLogsManager(ClashRoyaleAPI.DataExtractor):
 
     def __get_previous_wars_data(self):
         previous_war_logs = self.sheet_accessor.get(index=1, first_column="F",
-                                                    last_column=self.sheet_accessor.next_available_col(1,
-                                                                                                       penultimate=True))
+                                                    last_column=self.sheet_accessor.next_available_col(1, True))
         return previous_war_logs
 
     def __fetch_war_results(self, df: DataFrame):
