@@ -129,13 +129,20 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
         for i in range(1, 51):
             ranks.append([i])
 
-        self.sheet_accessor.get_gc().get_worksheet(0).clear()
-        self.sheet_accessor.get_gc().get_worksheet(0).update(f'A1:I1', [ColumnIndex.ordered_col_indexes()])
-        self.sheet_accessor.get_gc().get_worksheet(0).update(_range, _values, value_input_option='USER_ENTERED')
-        self.sheet_accessor.get_gc().get_worksheet(0).sort((6, 'des'), range='A2:G8')
-        self.sheet_accessor.get_gc().get_worksheet(0).update('A2:A51', ranks)
+        try:
+            self.sheet_accessor.get_gc().get_worksheet(0).clear()
+            self.sheet_accessor.get_gc().get_worksheet(0).update(f'A1:I1', [ColumnIndex.ordered_col_indexes()])
+            self.sheet_accessor.get_gc().get_worksheet(0).update(_range, _values, value_input_option='USER_ENTERED')
+            self.sheet_accessor.get_gc().get_worksheet(0).sort((6, 'des'), range='A2:H51')
+            self.sheet_accessor.get_gc().get_worksheet(0).update('A2:A51', ranks)
 
-        return f'{datetime.now()} : Updated Summary (Sheet #1)'
+            self.sheet_accessor.get_gc().get_worksheet(0).update_acell("K1", f"Dernière mise à jour : {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+
+            self._color_sheet()
+
+            return f'{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} : Updated Summary (Sheet #1)'
+        except APIError:
+            return "Error. Try in a few minutes."
 
     @staticmethod
     def __merge(dict1: dict, dict2: dict):
