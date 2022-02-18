@@ -110,7 +110,8 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
             points = f"""=IFERROR(VLOOKUP(H{i + 1};'Score de Guerre'!B2:C;2; FALSE);0) + IFERROR(VLOOKUP(H{i + 1};'Score de Bateau'!B2:C;2; FALSE);0)"""
             # noinspection PyTypeChecker
             ratio = f'=IFERROR(ROUND($D{i + 1}/($E{i + 1}-2);0);0)'
-            moyenne = f"""=IFERROR(ROUND($D{i + 1} / COUNT(INDIRECT("'Score de Guerre'!F"&MATCH($B{i + 1};'Score de Guerre'!A:A;0)&":O"&MATCH($B{i + 1};'Score de Guerre'!A:A;0)));0);0)"""
+            # noinspection PyTypeChecker
+            moyenne = f"""=IFERROR(ROUND($D{i + 1} / COUNT(INDIRECT("'Score de Guerre'!F"&MATCH($H{i + 1};'Score de Guerre'!B:B;0)&":O"&MATCH($H{i + 1};'Score de Guerre'!B:B;0)));0);0)"""
             df.at[i, ColumnIndex.POINTS.value] = points
             df.at[i, ColumnIndex.RATIO.value] = ratio
             df.at[i, ColumnIndex.AVERAGE.value] = moyenne
