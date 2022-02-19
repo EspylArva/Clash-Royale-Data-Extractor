@@ -47,6 +47,7 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
         df = self.sheet_accessor.get(index=1, last_column=max_col_letter)
         inactivities = dict()
         for i, row in df.iterrows():
+            df.at[i, ColumnIndex.TAG] = f'=HYPERLINK("https://royaleapi.com/player/{row["Tag"][1:]}";"{row["Tag"]}")'
             inactivity = 0
             for it in range(5, max_col_index):
                 if row[it] == "0":
@@ -54,6 +55,8 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
                 else:
                     break
             inactivities[row["Tag"]] = inactivity
+            print(inactivity)
+        print(inactivities)
         return inactivities
 
     def __build_summary(self):
@@ -110,7 +113,7 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
             # noinspection PyTypeChecker
             points = f"""=IFERROR(VLOOKUP(H{i + 1};'Score de Guerre'!B2:C;2; FALSE);0) + IFERROR(VLOOKUP(H{i + 1};'Score de Bateau'!B2:C;2; FALSE);0)"""
             # noinspection PyTypeChecker
-            ratio = f'=IFERROR(ROUND($D{i + 1}/($E{i + 1}-2);0);0)'
+            ratio = f'=IFERROR(ROUND($D{i + 1}/(MID($E{i + 1};4;2)-2);0);0)'
             # noinspection PyTypeChecker
             moyenne = f"""=IFERROR(ROUND($D{i + 1} / COUNT(INDIRECT("'Score de Guerre'!F"&MATCH($H{i + 1};'Score de Guerre'!B:B;0)&":O"&MATCH($H{i + 1};'Score de Guerre'!B:B;0)));0);0)"""
             # noinspection PyTypeChecker

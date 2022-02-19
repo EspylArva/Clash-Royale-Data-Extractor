@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 import os
-=======
-from SpreadsheetLoader import SpreadsheetLoader, SpreadsheetLoaderSettings
-import pandas as pd
->>>>>>> d281a87... Fixed some color issues on Summary. Updated todo list.
 from tkinter import Tk
 
 from ClashRoyaleAPI import ApiConnectionManager

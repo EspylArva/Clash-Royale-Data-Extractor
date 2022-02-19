@@ -88,12 +88,12 @@ class WarLogsManager(ClashRoyaleAPI.DataExtractor):
         df = self.__fetch_boat_results(df=df)
 
         for i, row in df.iterrows():
+            tag = row[ColumnIndex.TAG.value]
+            df.at[i, ColumnIndex.TAG.value] = f'=HYPERLINK("https://royaleapi.com/player/{tag[1:]}";"{tag}")'
             # noinspection PyTypeChecker
-            total = f'=SUM($F{i + 2}:$O{i + 2}) * 60'
+            df.at[i, ColumnIndex.SCORE] = f'=SUM($F{i + 2}:$O{i + 2}) * 60'
             # noinspection PyTypeChecker
-            moyenne = f'=IFERROR(ROUND(C{i + 2}/COUNT($F{i + 2}:$O{i + 2});0);0)'
-            df.at[i, 'Total'] = total
-            df.at[i, 'Moyenne'] = moyenne
+            df.at[i, ColumnIndex.AVERAGE] = f'=IFERROR(ROUND(C{i + 2}/COUNT($F{i + 2}:$O{i + 2});0);0)'
         df = df.fillna("")
         return df
 
@@ -108,12 +108,12 @@ class WarLogsManager(ClashRoyaleAPI.DataExtractor):
         # FIXME: Merge previous wars
 
         for i, row in df.iterrows():
+            tag = row[ColumnIndex.TAG.value]
+            df.at[i, ColumnIndex.TAG.value] = f'=HYPERLINK("https://royaleapi.com/player/{tag[1:]}";"{tag}")'
             # noinspection PyTypeChecker
-            total = f'=SUM($F{i + 2}:$O{i + 2})'
+            df.at[i, ColumnIndex.SCORE] = f'=SUM($F{i + 2}:$O{i + 2})'
             # noinspection PyTypeChecker
-            moyenne = f'=IFERROR(ROUND(C{i + 2}/COUNT($F{i + 2}:$O{i + 2});0);0)'
-            df.at[i, 'Total'] = total
-            df.at[i, 'Moyenne'] = moyenne
+            df.at[i, ColumnIndex.AVERAGE] = f'=IFERROR(ROUND(C{i + 2}/COUNT($F{i + 2}:$O{i + 2});0);0)'
         df = df.fillna("")
         return df
 

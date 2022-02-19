@@ -63,13 +63,21 @@ class DataExtractor:
         clan_members = stream(self.members_data["items"]) \
             .sorted(lambda member: member["name"]) \
             .map(
-                lambda member: { "name"       : member["name"], "role": Role.get_french_function(member["role"]), "tag": member["tag"],
-                                 "castleLevel": member["expLevel"] }) \
+                lambda member: {
+                    "name"       : member["name"],
+                    "role"       : Role.get_french_function(member["role"]),
+                    "tag"        : f'=HYPERLINK("https://royaleapi.com/player/{member["tag"][1:]}";"{member["tag"]}")',
+                    "castleLevel": f'👑 {member["expLevel"]}'
+                }) \
             .toJson()
         return clan_members
 
     def _get_wars_log(self):
         return stream(self.war_data["items"]) \
-            .map(lambda season: { "id"        : f'{season["seasonId"]}:{season["sectionIndex"]}',
-                                  "war_record": stream(season["standings"]).filter(lambda clan: clan["clan"]["tag"] == f'#{self.clan_id}').toList()[0] }) \
+            .map(
+                lambda season: {
+                    "id"        : f'{season["seasonId"]}:{int(season["sectionIndex"]) + 1}',
+                    "war_record": stream(season["standings"]).filter(
+                            lambda clan: clan["clan"]["tag"] == f'#{self.clan_id}'
+                    ).toList()[0] }) \
             .toList()
