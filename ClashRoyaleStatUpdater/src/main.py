@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 import os
+=======
+from SpreadsheetLoader import SpreadsheetLoader, SpreadsheetLoaderSettings
+import pandas as pd
+>>>>>>> d281a87... Fixed some color issues on Summary. Updated todo list.
 from tkinter import Tk
 
 from ClashRoyaleAPI import ApiConnectionManager
@@ -27,5 +32,13 @@ if __name__ == '__main__':
 
     # pyinstaller --onefile --noconsole src/main.py -i ./resources/icon.ico --hidden-import pyxtension
 
-    # TODO : Totaux sur page 2 et 3
-    # TODO : Historiques des guerres
+    # TODO
+    # - Totaux sur page 2 et 3
+    # - Historiques des guerres
+    # - Stats utiles (moyennes, min, max)
+    #     - % de participation par guerre
+    #     - nombre d'attaque de bateau
+    #     - gain de points
+    #     - position
+    # - Afficher top X des participants sur chaque guerre
+    # - Affichage des updates de role
