@@ -1,5 +1,7 @@
 from datetime import datetime
 from enum import Enum
+from itertools import groupby
+from operator import itemgetter
 
 import pandas as pd
 from gspread.exceptions import APIError
@@ -153,10 +155,11 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
         for index in indexes:
             inactivity = int(df[ColumnIndex.INACTIVITY.value][index].split('/')[0])
             gb_levels = 1 - (inactivity * 0.11)
-            request = SpreadsheetLoader.change_color(sheet_id=sheet_id,
-                                                     start_row=index, end_row=index + 1,
-                                                     start_col=8, end_col=9, r=1, g=gb_levels, b=gb_levels)
-            body["requests"].append(request)
+            if inactivity > 0:
+                request = SpreadsheetLoader.change_color(sheet_id=sheet_id,
+                                                         start_row=index, end_row=index + 1,
+                                                         start_col=8, end_col=9, r=1, g=gb_levels, b=gb_levels)
+                body["requests"].append(request)
 
     def _clear_colors(self):
         sheet_id = self.sheet_accessor.get_gc().get_worksheet(0).id
