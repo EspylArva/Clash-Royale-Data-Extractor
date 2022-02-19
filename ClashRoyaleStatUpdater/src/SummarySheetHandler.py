@@ -42,7 +42,6 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
     def __get_inactivity(self):
         max_col_index = self.sheet_accessor.next_available_col_index(spreadsheet_index=1)
         max_col_letter = self.sheet_accessor.next_available_col(spreadsheet_index=1, penultimate=True)
-
         df = self.sheet_accessor.get(index=1, last_column=max_col_letter)
         inactivities = dict()
         for i, row in df.iterrows():
@@ -70,7 +69,7 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
             grades.append(member["role"].value)
             niveaux_chateau.append(member["castleLevel"])
             tags.append(member["tag"])
-            inactivity.append(inactivities.get(member["tag"], 0))
+            inactivity.append(inactivities.get(member['tag'], '0'))
         df = DataFrame({
             ColumnIndex.NAME.value        : pseudos,
             ColumnIndex.ROLE.value        : grades,
@@ -112,11 +111,90 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
             ratio = f'=IFERROR(ROUND($D{i + 1}/($E{i + 1}-2);0);0)'
             # noinspection PyTypeChecker
             moyenne = f"""=IFERROR(ROUND($D{i + 1} / COUNT(INDIRECT("'Score de Guerre'!F"&MATCH($H{i + 1};'Score de Guerre'!B:B;0)&":O"&MATCH($H{i + 1};'Score de Guerre'!B:B;0)));0);0)"""
+            # noinspection PyTypeChecker
+            inactivity = f"""={row[ColumnIndex.INACTIVITY.value]}&"/"&COUNT(INDIRECT("'Score de Guerre'!F"&MATCH(H{i + 1};'Score de Guerre'!B:B; 0)):INDIRECT("'Score de Guerre'!O"&MATCH(H{i + 1};'Score de Guerre'!B:B; 0)))"""
+
             df.at[i, ColumnIndex.POINTS.value] = points
             df.at[i, ColumnIndex.RATIO.value] = ratio
+            df.at[i, ColumnIndex.INACTIVITY.value] = inactivity
             df.at[i, ColumnIndex.AVERAGE.value] = moyenne
-
         return df
+
+    @staticmethod
+    def _color_header(body: dict, sheet_id: str):
+        request = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=0, end_row=1,
+                                                 start_col=0, end_col=9, r=0.4, g=0.2, b=0.5)
+        body["requests"].append(request)
+        return
+
+    @staticmethod
+    def _color_roles(df: DataFrame, body: dict, sheet_id: str):
+        for role in list(Role):
+            raw_indexes = df.index[df[ColumnIndex.RANK.value] == role.value].tolist()
+            for k, g in groupby(enumerate(raw_indexes), lambda ix: ix[0] - ix[1]):
+                indexes = list(map(itemgetter(1), g))
+                request = SpreadsheetLoader.change_color(sheet_id=sheet_id,
+                                                         start_row=int(indexes[0]), end_row=int(indexes[-1]) + 1,
+                                                         start_col=2, end_col=3, r=role.r, g=role.g, b=role.b)
+                body["requests"].append(request)
+
+    @staticmethod
+    def _color_thresholds(body: dict, sheet_id: str):
+        top_three = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=1, end_row=4,
+                                                   start_col=0, end_col=9, r=1, g=1, b=0.3)
+        top_twenty = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=4, end_row=21,
+                                                    start_col=0, end_col=9, r=0.9, g=0.9, b=0.9)
+        body["requests"].append(top_three)
+        body["requests"].append(top_twenty)
+
+    @staticmethod
+    def _color_inactivity(df: DataFrame, body: dict, sheet_id: str):
+        indexes = df.index[df[ColumnIndex.INACTIVITY.value] != "0"].tolist()
+        for index in indexes:
+            inactivity = int(df[ColumnIndex.INACTIVITY.value][index].split('/')[0])
+            gb_levels = 1 - (inactivity * 0.11)
+            request = SpreadsheetLoader.change_color(sheet_id=sheet_id,
+                                                     start_row=index, end_row=index + 1,
+                                                     start_col=8, end_col=9, r=1, g=gb_levels, b=gb_levels)
+            body["requests"].append(request)
+
+    def _clear_colors(self):
+        sheet_id = self.sheet_accessor.get_gc().get_worksheet(0).id
+        clear_format_request = {
+            "repeatCell": {
+                "range" : {
+                    "sheetId"         : sheet_id,
+                    "startRowIndex"   : 0, "endRowIndex": 51,
+                    "startColumnIndex": 0, "endColumnIndex": 10
+                },
+                "cell"  : { "userEnteredFormat": {
+                    "backgroundColor": {
+                        "alpha": 0,
+                        "red"  : 1,
+                        "green": 1,
+                        "blue" : 1
+                    }
+                } },
+                "fields": "userEnteredFormat.backgroundColor"
+            }
+        }
+        body = {
+            "requests": [clear_format_request]
+        }
+        self.sheet_accessor.get_gc().batch_update(body)
+
+    def _color_sheet(self):
+        sheet_id = self.sheet_accessor.get_gc().get_worksheet(0).id
+        body = { "requests": [] }
+
+        df = self.sheet_accessor.get(index=0, first_column='A', last_column='I')
+
+        self._color_thresholds(body, sheet_id)
+        self._color_header(body, sheet_id)
+        self._color_roles(df, body, sheet_id)
+        self._color_inactivity(df, body, sheet_id)
+
+        self.sheet_accessor.get_gc().batch_update(body)
 
     def update_summary(self):
         df = self.__build_summary()
@@ -133,7 +211,7 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
             self.sheet_accessor.get_gc().get_worksheet(0).clear()
             self.sheet_accessor.get_gc().get_worksheet(0).update(f'A1:I1', [ColumnIndex.ordered_col_indexes()])
             self.sheet_accessor.get_gc().get_worksheet(0).update(_range, _values, value_input_option='USER_ENTERED')
-            self.sheet_accessor.get_gc().get_worksheet(0).sort((6, 'des'), range='A2:H51')
+            self.sheet_accessor.get_gc().get_worksheet(0).sort((6, 'des'), range='A2:I51')
             self.sheet_accessor.get_gc().get_worksheet(0).update('A2:A51', ranks)
 
             self.sheet_accessor.get_gc().get_worksheet(0).update_acell("K1", f"Dernière mise à jour : {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")

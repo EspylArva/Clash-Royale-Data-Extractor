@@ -28,6 +28,4 @@ if __name__ == '__main__':
     # pyinstaller --onefile --noconsole src/main.py -i ./resources/icon.ico --hidden-import pyxtension
 
     # TODO : Totaux sur page 2 et 3
-    # TODO : horodatage de la dernière utilisation
     # TODO : Historiques des guerres
-    # Search points on tag
