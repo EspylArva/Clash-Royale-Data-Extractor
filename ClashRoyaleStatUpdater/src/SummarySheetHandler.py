@@ -130,7 +130,7 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
     @staticmethod
     def _color_roles(df: DataFrame, body: dict, sheet_id: str):
         for role in list(Role):
-            raw_indexes = df.index[df[ColumnIndex.RANK.value] == role.value].tolist()
+            raw_indexes = df.index[df[ColumnIndex.ROLE.value] == role.value].tolist()
             for k, g in groupby(enumerate(raw_indexes), lambda ix: ix[0] - ix[1]):
                 indexes = list(map(itemgetter(1), g))
                 request = SpreadsheetLoader.change_color(sheet_id=sheet_id,
