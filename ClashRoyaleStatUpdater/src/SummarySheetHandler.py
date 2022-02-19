@@ -141,9 +141,9 @@ class SummaryManager(ClashRoyaleAPI.DataExtractor):
     @staticmethod
     def _color_thresholds(body: dict, sheet_id: str):
         top_three = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=1, end_row=4,
-                                                   start_col=0, end_col=10, r=1, g=1, b=0.3)
+                                                   start_col=0, end_col=9, r=1, g=1, b=0.3)
         top_twenty = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=4, end_row=21,
-                                                    start_col=0, end_col=10, r=0.9, g=0.9, b=0.9)
+                                                    start_col=0, end_col=9, r=0.9, g=0.9, b=0.9)
         body["requests"].append(top_three)
         body["requests"].append(top_twenty)
 
