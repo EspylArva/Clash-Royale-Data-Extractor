@@ -7,9 +7,8 @@ import pandas as pd
 from gspread.exceptions import APIError
 from pandas import DataFrame
 
-from src import ClashRoyaleAPI
-from src.ClashRoyaleAPI import ApiConnectionManager, Role
-from src.SpreadsheetLoader import SpreadsheetLoader
+from ClashRoyaleAPI import ApiConnectionManager, DataExtractor, Role
+from SpreadsheetLoader import SpreadsheetLoader
 
 
 class ColumnIndex(str, Enum):
@@ -28,7 +27,7 @@ class ColumnIndex(str, Enum):
                 ColumnIndex.ROLE.value]
 
 
-class WarLogsManager(ClashRoyaleAPI.DataExtractor):
+class WarLogsManager(DataExtractor):
     def __init__(self, api_connection_manager: ApiConnectionManager, accessor: SpreadsheetLoader):
         super().__init__(api_connection_manager, accessor)
 

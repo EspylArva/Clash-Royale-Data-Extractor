@@ -1,10 +1,12 @@
 import os
-from tkinter import Tk
+
+import pandas as pd
 
 from ClashRoyaleAPI import ApiConnectionManager
-from GUI import GUI
 from SpreadsheetLoader import SpreadsheetLoader, SpreadsheetLoaderSettings
-from src import SummarySheetHandler, WarsLogSheetHandler
+from StatSheetHandler import StatManager
+from SummarySheetHandler import SummaryManager
+from WarsLogSheetHandler import WarLogsManager
 
 if __name__ == '__main__':
     print(os.path.abspath(__file__))
@@ -13,27 +15,34 @@ if __name__ == '__main__':
         data = file.read()
         fd = open(filename, 'rb')
 
-    loader = SpreadsheetLoader(settings=SpreadsheetLoaderSettings())
-    api_connection_manager = ApiConnectionManager()
+        pd.set_option('display.width', None)
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.max_rows', None)
 
-    summary_manager = SummarySheetHandler.SummaryManager(api_connection_manager, loader)
-    warlogs_manager = WarsLogSheetHandler.WarLogsManager(api_connection_manager, loader)
+        loader = SpreadsheetLoader(settings=SpreadsheetLoaderSettings(data))
+        api_connection_manager = ApiConnectionManager()
 
-    root = Tk()
-    root.iconbitmap('./../resources/icon.ico')
-    # root.tk.call('wm', 'iconphoto', root._w, tkinter.PhotoImage(file='./../resources/icon.ico'))
-    gui = GUI(root, summary_manager, warlogs_manager)
-    root.mainloop()
+        summary_manager = SummaryManager(api_connection_manager, loader)
+        warlogs_manager = WarLogsManager(api_connection_manager, loader)
 
-    # pyinstaller --onefile --noconsole src/main.py -i ./resources/icon.ico --hidden-import pyxtension
+        stat_manager = StatManager(api_connection_manager, loader)
 
-    # TODO
-    # - Totaux sur page 2 et 3
-    # - Historiques des guerres
-    # - Stats utiles (moyennes, min, max)
-    #     - % de participation par guerre
-    #     - nombre d'attaque de bateau
-    #     - gain de points
-    #     - position
-    # - Afficher top X des participants sur chaque guerre
-    # - Affichage des updates de role
+"""
+        root = Tk()
+        root.iconbitmap('resources/icon.ico')
+        gui = GUI(root, summary_manager, warlogs_manager)
+        root.mainloop()
+"""
+
+# pyinstaller --onefile --noconsole src/main.py -i ./resources/icon.ico --hidden-import pyxtension
+
+# TODO
+# - Totaux sur page 2 et 3
+# - Historiques des guerres
+# - Stats utiles (moyennes, min, max)
+#     - % de participation par guerre
+#     - nombre d'attaque de bateau
+#     - gain de points
+#     - position
+# - Afficher top X des participants sur chaque guerre
+# - Affichage des updates de role
