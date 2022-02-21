@@ -26,6 +26,7 @@ if __name__ == '__main__':
         warlogs_manager = WarLogsManager(api_connection_manager, loader)
 
         stat_manager = StatManager(api_connection_manager, loader)
+        stat_manager.update_statistics()
 
 """
         root = Tk()

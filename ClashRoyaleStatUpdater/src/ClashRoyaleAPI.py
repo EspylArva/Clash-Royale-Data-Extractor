@@ -1,17 +1,18 @@
 import http.client
 import json
-from enum import Enum
 
+from aenum import Enum
 from pyxtension.streams import stream
 
 from src.SpreadsheetLoader import SpreadsheetLoader
 
 
-class Role(str, Enum):
-    MEMBER = "Membre"
-    ELDER = "Aîné"
-    CO_LEADER = "Adjoint"
-    LEADER = "Chef"
+class Role(Enum):
+    _init_ = "value r g b"
+    MEMBER = "Membre", 0.5, 0.9, 1
+    ELDER = "Aîné", 0.3, 0.6, 0.9
+    CO_LEADER = "Adjoint", 0.1, 0.8, 0.4
+    LEADER = "Chef", 0.6, 0.4, 0.6
 
     @staticmethod
     def get_french_function(function: str):
@@ -28,28 +29,30 @@ class Role(str, Enum):
 
 
 class ApiConnectionManager:
-    TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6IjAwM2ZmZTU0LTRlNGQtNGYzZi1iODA5LTlhM2MxYzA3MDdkNiIsImlhdCI6MTYzNzU5MTM0NSwic3ViIjoiZGV2ZWxvcGVyLzBhN2ZjMTg1LWZmMmEtMThjMC1iNTFlLWY3MmMyZmM3MzJmMSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyIxOTIuNTQuMTQ1LjE0MyIsIjEyOC4xMjguMTI4LjEyOCIsIjkzLjI2LjY2LjE1NSJdLCJ0eXBlIjoiY2xpZW50In1dfQ.dzY8ytb12EGdw_AJs8El9oPnE-9vs6boTXxwR9IUabLksyBNfxDwxcQQ22aEjHa85IA3qNgw6tDLtt1KFfbqsw"
     CLAN_ID = "8YJPUR"
     OFFICIAL_API_URL = "api.clashroyale.com"
     PROXY_API_URL = "proxy.royaleapi.dev"
 
     def __init__(self):
-        self.conn = http.client.HTTPSConnection(self.PROXY_API_URL)
-        self.headers = { 'Authorization': 'Bearer {0}'.format(self.TOKEN) }
-        self.WAR_LOG_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/riverracelog"
-        self.MEMBERS_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/members"
-
-    def get_war_data(self):
-        self.conn.request("GET", self.WAR_LOG_ENDPOINT, None, self.headers)
-        response = self.conn.getresponse().read().decode("utf-8")
-        data = json.loads(response)
-        return data
+        filename = './resources/cr-api-key.txt'
+        with open(filename, 'r') as file:
+            self.token = file.read()
+            self.conn = http.client.HTTPSConnection(self.PROXY_API_URL)
+            self.headers = { 'Authorization': 'Bearer {0}'.format(self.token) }
+            self.WAR_LOG_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/riverracelog"
+            self.MEMBERS_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/members"
 
     def get_member_data(self):
         self.conn.request("GET", self.MEMBERS_ENDPOINT, None, self.headers)
         response = self.conn.getresponse().read().decode("utf-8")
         members = json.loads(response)
         return members
+
+    def get_war_data(self):
+        self.conn.request("GET", self.WAR_LOG_ENDPOINT, None, self.headers)
+        response = self.conn.getresponse().read().decode("utf-8")
+        data = json.loads(response)
+        return data
 
 
 class DataExtractor:
