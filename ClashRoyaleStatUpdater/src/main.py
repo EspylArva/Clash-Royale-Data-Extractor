@@ -40,10 +40,5 @@ if __name__ == '__main__':
 # TODO
 # - Totaux sur page 2 et 3
 # - Historiques des guerres
-# - Stats utiles (moyennes, min, max)
-#     - % de participation par guerre
-#     - nombre d'attaque de bateau
-#     - gain de points
-#     - position
 # - Afficher top X des participants sur chaque guerre
 # - Affichage des updates de role
