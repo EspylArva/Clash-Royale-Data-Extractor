@@ -24,9 +24,12 @@ if __name__ == '__main__':
 
         summary_manager = SummaryManager(api_connection_manager, loader)
         warlogs_manager = WarLogsManager(api_connection_manager, loader)
-
         stat_manager = StatManager(api_connection_manager, loader)
-        stat_manager.update_statistics()
+
+        # stat_manager.update_statistics()
+        # warlogs_manager.update_war_results()
+        # warlogs_manager.update_boat_results()
+        summary_manager.update_summary()
 
 """
         root = Tk()
