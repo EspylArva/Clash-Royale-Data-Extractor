@@ -10,6 +10,7 @@ google==3.0.0
 google-auth==2.6.0
 google-auth-oauthlib==0.4.6
 gspread==5.1.1
+gunicorn==19.9.0
 idna==3.3
 itsdangerous==2.1.0
 Jinja2==3.0.3

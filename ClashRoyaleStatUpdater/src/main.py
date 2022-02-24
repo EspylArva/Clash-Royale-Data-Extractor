@@ -1,13 +1,14 @@
 import os
 
+import flask
 import pandas as pd
 from flask import Flask
 
-from ClashRoyaleAPI import ApiConnectionManager
-from SpreadsheetLoader import SpreadsheetLoader, SpreadsheetLoaderSettings
-from StatSheetHandler import StatManager
-from SummarySheetHandler import SummaryManager
-from WarsLogSheetHandler import WarLogsManager
+from src.ClashRoyaleAPI import ApiConnectionManager
+from src.SpreadsheetLoader import SpreadsheetLoader, SpreadsheetLoaderSettings
+from src.StatSheetHandler import StatManager
+from src.SummarySheetHandler import SummaryManager
+from src.WarsLogSheetHandler import WarLogsManager
 
 app = Flask(__name__)
 
@@ -28,10 +29,19 @@ summary_manager = SummaryManager(api_connection_manager, loader)
 warlogs_manager = WarLogsManager(api_connection_manager, loader)
 stat_manager = StatManager(api_connection_manager, loader)
 
+localhost = "http://127.0.0.1:8080"
+
 
 @app.route('/')
 def hello():
-    return 'Hello World!'
+    print(flask.url_for("update_summary"))
+    return {
+        "Update Summary"     : f'{localhost}/update/summary',
+        "Update War logs"    : f'{localhost}/update/war-logs',
+        "Update Boat attacks": f'{localhost}/update/boat-attacks',
+        "Update Statistics"  : f'{localhost}/update/statistics',
+        "Update Everything"  : f'{localhost}/update/all'
+    }
 
 
 @app.route('/update/summary')
@@ -70,6 +80,7 @@ def mark_update():
 if __name__ == '__main__':
     app.run(host="127.0.0.1", port=8080, debug=True)
     # https://cloud.google.com/appengine/docs/standard/python3/quickstart#windows
+    # Warning: http://127.0.0.1:8080 != https://127.0.0.1:8080 (use HTTP, not HTTPS)
 """
         root = Tk()
         root.iconbitmap('resources/icon.ico')
@@ -81,8 +92,11 @@ if __name__ == '__main__':
 
 # cd C:\Users\Iteration\PycharmProject\Clash-Royale-Data-Extractor\ClashRoyaleStatUpdater
 # /venv/Script/activate
+
+# pip freeze > requirements.txt
+
 # gcloud app deploy
-# gcloud app brwose
+# gcloud app browse
 
 
 # TODO

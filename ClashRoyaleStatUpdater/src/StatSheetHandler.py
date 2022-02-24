@@ -3,8 +3,8 @@ from datetime import datetime
 from gspread.exceptions import APIError
 from pyxtension.streams import stream
 
-from ClashRoyaleAPI import ApiConnectionManager, DataExtractor
-from SpreadsheetLoader import SpreadsheetLoader
+from src.ClashRoyaleAPI import ApiConnectionManager, DataExtractor
+from src.SpreadsheetLoader import SpreadsheetLoader
 
 
 class StatManager(DataExtractor):
