@@ -210,8 +210,6 @@ class WarLogsManager(DataExtractor):
         df = self._update_members_role(df=df)
         df = self._fetch_war_results(df=df)
 
-        # FIXME: Merge previous wars
-
         for i, row in df.iterrows():
             tag = row[ColumnIndex.TAG.value]
             df.at[i, ColumnIndex.TAG.value] = f'=HYPERLINK("https://royaleapi.com/player/{tag[1:]}";"{tag}")'
@@ -233,12 +231,10 @@ class WarLogsManager(DataExtractor):
             # df.index = df.index + 1  # shifting index
             # df = df.sort_index()  # sorting by index
 
-            _range = f'A2:{chr(ord("A") + df.shape[1] - 1)}'  # Fixme: if inserting total, will need to shift A2 to A3
-            _values = df.values.tolist()
+            self.insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
             self._insert_missing_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
             self._highlight_zeroes(2, df)
-            self._hide_non_members(df.index[(df[ColumnIndex.ROLE.value] == "")].tolist(),
-                                   sheet_index=2)  # & (df[ColumnIndex.ROLE.value] != "Total")
+            self._hide_non_members(df.index[(df[ColumnIndex.ROLE.value] == "")].tolist(), sheet_index=2)  # & (df[ColumnIndex.ROLE.value] != "Total")
 
             return f'{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} : Updated Boat Attacks (Sheet #3)'
         except APIError:
@@ -248,9 +244,10 @@ class WarLogsManager(DataExtractor):
         try:
             df = self.get_war_sheet_update()
 
+            self.insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
             self._insert_missing_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
             self._highlight_zeroes(sheet_index=1, df=df)
-            self._hide_non_members(df.index[df['Grade'] == ""].tolist(), sheet_index=1)
+            self._hide_non_members(df.index[df[ColumnIndex.ROLE.value] == ""].tolist(), sheet_index=1)
 
             return f'{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} : Updated War Logs (Sheet #2)'
         except APIError:
@@ -258,10 +255,16 @@ class WarLogsManager(DataExtractor):
             # self.update_war_results()
             return "Error. Try in a few minutes."
 
+    def insert_alpha_members(self, df: DataFrame, sheet_id: int):
+        _df = df.filter(regex="[a-zA-Z]")
+        _range = f'A1:E'
+        _values = [_df.columns.tolist()] + _df.values.tolist()
+        self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).update(_range, _values, value_input_option='USER_ENTERED')
+
     def _insert_missing_data(self, df: DataFrame, sheet_id: int):
         _df = df.filter(regex="[0-9]+:[0-9]+")
         history = self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).get_values("F1:1")[0]
-        _df = df.drop(columns=history, errors='ignore')
+        _df = _df.drop(columns=history, errors='ignore')
 
         if _df.shape[1] > 0:
             body = { 'requests': [] }

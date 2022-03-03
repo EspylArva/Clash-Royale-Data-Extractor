@@ -68,7 +68,8 @@ def update_everything():
     stat_manager.update_statistics()
     warlogs_manager.update_war_results()
     warlogs_manager.update_boat_results()
-    return summary_manager.update_summary()
+    summary_manager.update_summary()
+    return "Update finished"
 
 
 def mark_update():
