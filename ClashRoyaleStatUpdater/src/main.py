@@ -1,6 +1,5 @@
 import os
 
-import flask
 import pandas as pd
 from flask import Flask
 

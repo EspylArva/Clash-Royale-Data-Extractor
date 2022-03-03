@@ -235,13 +235,8 @@ class WarLogsManager(DataExtractor):
 
             _range = f'A2:{chr(ord("A") + df.shape[1] - 1)}'  # Fixme: if inserting total, will need to shift A2 to A3
             _values = df.values.tolist()
-
+            self._insert_missing_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
             self._highlight_zeroes(2, df)
-
-            self.sheet_accessor.get_gc().get_worksheet(2).update(f'A1:{chr(ord("A") + df.shape[1] - 1)}1',
-                                                                 [df.keys().tolist()])
-            self.sheet_accessor.get_gc().get_worksheet(2).update(_range, _values, value_input_option='USER_ENTERED')
-
             self._hide_non_members(df.index[(df[ColumnIndex.ROLE.value] == "")].tolist(),
                                    sheet_index=2)  # & (df[ColumnIndex.ROLE.value] != "Total")
 
@@ -252,14 +247,9 @@ class WarLogsManager(DataExtractor):
     def update_war_results(self):
         try:
             df = self.get_war_sheet_update()
-            _range = f'A2:{chr(ord("A") + df.shape[1] - 1)}'
-            _values = df.values.tolist()
 
-            self._highlight_zeroes(1, df)
-
-            self.sheet_accessor.get_gc().get_worksheet(1).update(f'A1:{chr(ord("A") + df.shape[1] - 1)}1',
-                                                                 [df.keys().tolist()])
-            self.sheet_accessor.get_gc().get_worksheet(1).update(_range, _values, value_input_option='USER_ENTERED')
+            self._insert_missing_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
+            self._highlight_zeroes(sheet_index=1, df=df)
             self._hide_non_members(df.index[df['Grade'] == ""].tolist(), sheet_index=1)
 
             return f'{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} : Updated War Logs (Sheet #2)'
@@ -267,3 +257,28 @@ class WarLogsManager(DataExtractor):
             # time.sleep(60)
             # self.update_war_results()
             return "Error. Try in a few minutes."
+
+    def _insert_missing_data(self, df: DataFrame, sheet_id: int):
+        _df = df.filter(regex="[0-9]+:[0-9]+")
+        history = self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).get_values("F1:1")[0]
+        _df = df.drop(columns=history, errors='ignore')
+
+        if _df.shape[1] > 0:
+            body = { 'requests': [] }
+            body["requests"].append({
+                "insertDimension": {
+                    "range"            : {
+                        "sheetId"   : sheet_id,
+                        "dimension" : "COLUMNS",
+                        "startIndex": 5,
+                        "endIndex"  : 5 + _df.shape[1]
+                    },
+                    "inheritFromBefore": False
+                }
+            })
+            self.sheet_accessor.get_gc().batch_update(body)
+
+            _range = f'F1:{chr(ord("F") + _df.shape[1] - 1)}'
+            _values = [_df.columns.tolist()] + _df.values.tolist()
+
+            self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).update(_range, _values, value_input_option='USER_ENTERED')
