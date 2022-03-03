@@ -80,11 +80,11 @@ class SummaryManager(DataExtractor):
                 elderness = int(member[ColumnIndex.INACTIVITY].split("/")[1]) if member[ColumnIndex.INACTIVITY] != "" else 0
 
                 if points < exclusion_threshold and elderness > 3:
-                    map_changes["retrogradation"][int(member[ColumnIndex.RANK]) + 1] = f'Participation insuffisante : {points}<{exclusion_threshold} requis'
+                    map_changes["retrogradation"][int(member[ColumnIndex.RANK])] = f'Participation insuffisante : {points}<{exclusion_threshold} requis'
                 elif inactivity > inactivity_threshold:
-                    map_changes["retrogradation"][int(member[ColumnIndex.RANK]) + 1] = f'Inactif : {inactivity}>{inactivity_threshold} acceptables'
+                    map_changes["retrogradation"][int(member[ColumnIndex.RANK])] = f'Inactif : {inactivity}>{inactivity_threshold} acceptables'
                 elif int(member[ColumnIndex.RANK]) <= promotion_threshold:
-                    map_changes["promotion"][int(member[ColumnIndex.RANK]) + 1] = f'Participation de {points} points, et au rang {member["Rang"]}'
+                    map_changes["promotion"][int(member[ColumnIndex.RANK])] = f'Participation de {points} points, et au rang {member["Rang"]}'
         return map_changes
 
     def _clear_colors(self):
@@ -115,7 +115,7 @@ class SummaryManager(DataExtractor):
     @staticmethod
     def _color_header(body: dict, sheet_id: str):
         request = SpreadsheetLoader.change_color(sheet_id=sheet_id, start_row=0, end_row=1,
-                                                 start_col=0, end_col=9, r=0.4, g=0.2, b=0.5)
+                                                 start_col=0, end_col=10, r=0.4, g=0.2, b=0.5)
         body["requests"].append(request)
         return
 
@@ -263,20 +263,9 @@ class SummaryManager(DataExtractor):
             self.sheet_accessor.get_gc().get_worksheet(0).clear()
             self.sheet_accessor.get_gc().get_worksheet(0).update(f'A1:J1', [ColumnIndex.ordered_col_indexes() + ["Indication sur le grade"]])
             self.sheet_accessor.get_gc().get_worksheet(0).update(_range, _values, value_input_option='USER_ENTERED')
-            self.sheet_accessor.get_gc().get_worksheet(0).sort((6, 'des'),
-                                                               range='A2:I51')  # FIXME: should not have to sort...
-            self.sheet_accessor.get_gc().get_worksheet(0).update('A2:A51',
-                                                                 ranks)  # FIXME: should not have to force ranks
-
-            changes = self.analyse_roles()
-            for index in changes["promotion"]:
-                cell = f'J{index}'
-                value = changes["promotion"][index]
-                self.sheet_accessor.get_gc().get_worksheet(0).update(cell, value, value_input_option="USER_ENTERED")  # FIXME : Should batch update, and change color
-            for index in changes["retrogradation"]:
-                cell = f'J{index}'
-                value = changes["retrogradation"][index]
-                self.sheet_accessor.get_gc().get_worksheet(0).update(cell, value, value_input_option="USER_ENTERED")  # FIXME : Should batch update, and change color
+            self.sheet_accessor.get_gc().get_worksheet(0).sort((6, 'des'), range='A2:I51')  # FIXME: should not have to sort...
+            self.sheet_accessor.get_gc().get_worksheet(0).update('A2:A51', ranks)  # FIXME: should not have to force ranks
+            self._update_role_changes()
 
             self.sheet_accessor.get_gc().get_worksheet(0).update_acell("L1", f"Dernière mise à jour : {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
 
@@ -285,3 +274,43 @@ class SummaryManager(DataExtractor):
             return f'{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} : Updated Summary (Sheet #1)'
         except APIError:
             return "Error. Try in a few minutes."
+
+    @staticmethod
+    def _print_role_change(sheet_id: int, background_color: dict, role_change: dict, body: dict):
+        for k, g in groupby(enumerate([x for x in role_change]), lambda ix: ix[0] - ix[1]):
+            indexes = list(map(itemgetter(1), g))
+            the_range = {
+                        "sheetId"         : sheet_id,
+                        "startRowIndex"   : indexes[0], "endRowIndex": indexes[-1]+1,
+                        "startColumnIndex": 9, "endColumnIndex": 10
+                    }
+            body["requests"].append({
+                "repeatCell": {
+                    "range" : the_range,
+                    "cell"  : {
+                        "userEnteredFormat": {
+                            "backgroundColor": background_color
+                        }
+                    },
+                    "fields": "userEnteredFormat.backgroundColor"
+                }
+            })
+            body["requests"].append({
+                "updateCells": {
+                    "range": the_range,
+                    "rows": [{"values": [{"userEnteredValue": {"stringValue": role_change[x]}}]} for x in indexes ],
+                    "fields": "userEnteredValue"
+                }
+            })
+
+    def _update_role_changes(self):
+        self._clear_colors()
+        body = { "requests": [] }
+        changes = self.analyse_roles()
+        sheet_id = self.sheet_accessor.get_gc().get_worksheet(0).id
+
+        self._print_role_change(sheet_id, {"red"  : 0.4, "green": 0.8, "blue" : 0.4}, changes["promotion"], body)
+        self._print_role_change(sheet_id, {"red"  : 0.8, "green": 0.4, "blue" : 0.4}, changes["retrogradation"], body)
+
+        self.sheet_accessor.get_gc().batch_update(body)
+

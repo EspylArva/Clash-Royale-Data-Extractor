@@ -34,7 +34,6 @@ localhost = "http://127.0.0.1:8080"
 
 @app.route('/')
 def hello():
-    print(flask.url_for("update_summary"))
     return {
         "Update Summary"     : f'{localhost}/update/summary',
         "Update War logs"    : f'{localhost}/update/war-logs',
@@ -79,6 +78,7 @@ def mark_update():
 
 if __name__ == '__main__':
     app.run(host="127.0.0.1", port=8080, debug=True)
+
     # https://cloud.google.com/appengine/docs/standard/python3/quickstart#windows
     # Warning: http://127.0.0.1:8080 != https://127.0.0.1:8080 (use HTTP, not HTTPS)
 """
