@@ -231,7 +231,7 @@ class WarLogsManager(DataExtractor):
             # df.index = df.index + 1  # shifting index
             # df = df.sort_index()  # sorting by index
 
-            self.insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
+            self._insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
             self._insert_missing_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
             self._highlight_zeroes(2, df)
             self._hide_non_members(df.index[(df[ColumnIndex.ROLE.value] == "")].tolist(), sheet_index=2)  # & (df[ColumnIndex.ROLE.value] != "Total")
@@ -244,7 +244,7 @@ class WarLogsManager(DataExtractor):
         try:
             df = self.get_war_sheet_update()
 
-            self.insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
+            self._insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
             self._insert_missing_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
             self._highlight_zeroes(sheet_index=1, df=df)
             self._hide_non_members(df.index[df[ColumnIndex.ROLE.value] == ""].tolist(), sheet_index=1)
@@ -255,7 +255,7 @@ class WarLogsManager(DataExtractor):
             # self.update_war_results()
             return "Error. Try in a few minutes."
 
-    def insert_alpha_members(self, df: DataFrame, sheet_id: int):
+    def _insert_alpha_members(self, df: DataFrame, sheet_id: int):
         _df = df.filter(regex="[a-zA-Z]")
         _range = f'A1:E'
         _values = [_df.columns.tolist()] + _df.values.tolist()

@@ -28,8 +28,9 @@ summary_manager = SummaryManager(api_connection_manager, loader)
 warlogs_manager = WarLogsManager(api_connection_manager, loader)
 stat_manager = StatManager(api_connection_manager, loader)
 
-localhost = "http://127.0.0.1:8080"
-
+ip = "127.0.0.1"
+port = 8080
+localhost = f'http://{ip}:{port}'
 
 @app.route('/')
 def hello():
@@ -72,12 +73,18 @@ def update_everything():
     return "Update finished"
 
 
+# @app.route('/test')
+def test():
+    stat_manager.insert_missing_data(stat_manager.get_statistics())
+    return "Test fini"
+
+
 def mark_update():
     loader.get_gc().get_worksheet(0).update_acell("L1", "Mise-à-jour en cours... Merci de patienter...")
 
 
 if __name__ == '__main__':
-    app.run(host="127.0.0.1", port=8080, debug=True)
+    app.run(host=ip, port=port, debug=True)
 
     # https://cloud.google.com/appengine/docs/standard/python3/quickstart#windows
     # Warning: http://127.0.0.1:8080 != https://127.0.0.1:8080 (use HTTP, not HTTPS)
