@@ -103,14 +103,3 @@ class StatManager(DataExtractor):
                                                                  value_input_option='USER_ENTERED')
             self.sheet_accessor.get_gc().get_worksheet(3).update(_results_range, _results,
                                                                  value_input_option='USER_ENTERED')
-
-
-        """
-
-        if _df.shape[1] > 0:
-
-            _range = f'F1:{chr(ord("F") + _df.shape[1] - 1)}'
-            _values = [_df.columns.tolist()] + _df.values.tolist()
-
-            self.sheet_accessor.get_gc().get_worksheet(3).update(_range, _values, value_input_option='USER_ENTERED')
-        """
