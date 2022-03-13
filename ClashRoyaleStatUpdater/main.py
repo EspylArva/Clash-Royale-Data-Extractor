@@ -11,7 +11,6 @@ from src.WarsLogSheetHandler import WarLogsManager
 
 app = Flask(__name__)
 
-print(os.path.abspath(__file__))
 filename = './resources/google-api-key.txt'
 with open(filename, 'r') as file:
     data = file.read()
@@ -78,31 +77,18 @@ def update_everything():
     return "Update finished"
 
 
+@app.route('/test')
+def test():
+    return "OK"
+
+
 if __name__ == '__main__':
+    # Warning: http://127.0.0.1:8080 != https://127.0.0.1:8080 (use HTTP, not HTTPS)
     # app.run(host=ip, port=port, debug=True)
     app.run(debug=True)
-    # https://cloud.google.com/appengine/docs/standard/python3/quickstart#windows
-    # Warning: http://127.0.0.1:8080 != https://127.0.0.1:8080 (use HTTP, not HTTPS)
-"""
-        root = Tk()
-        root.iconbitmap('resources/icon.ico')
-        gui = GUI(root, summary_manager, warlogs_manager)
-        root.mainloop()
-"""
 
-# pyinstaller --onefile --noconsole src/main.py -i ./resources/icon.ico --hidden-import pyxtension
+    # pyinstaller --onefile --noconsole src/main.py -i ./resources/icon.ico --hidden-import pyxtension
 
-# cd C:\Users\Iteration\PycharmProject\Clash-Royale-Data-Extractor\ClashRoyaleStatUpdater
-# /venv/Script/activate
-
-# pip freeze > requirements.txt
-
-# gcloud app deploy
-# gcloud app browse
-
-
-# TODO
-# - Totaux sur page 2 et 3
-# - Historiques des guerres
-# - Afficher top X des participants sur chaque guerre
-# - Affichage des updates de role
+    # TODO
+    # - Totaux sur page 2 et 3
+    # - Afficher top X des participants sur chaque guerre

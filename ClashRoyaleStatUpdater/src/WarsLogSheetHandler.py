@@ -224,15 +224,9 @@ class WarLogsManager(DataExtractor):
         try:
             df = self.get_boat_sheet_update()
 
-            # total_row = ["", "Total", "=SUM(C3:C)", "=SUM(D3:D)", ""]
-            # for i in range(5, df.shape[1]):
-            #     total_row.append(f'=SUM({chr(ord("A") + i)}3:{chr(ord("A") + i)})')
-            # df.loc[-1] = total_row  # adding a row
-            # df.index = df.index + 1  # shifting index
-            # df = df.sort_index()  # sorting by index
-
             self._insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
             self._insert_missing_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
+            self._insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
             self._highlight_zeroes(2, df)
             self._hide_non_members(df.index[(df[ColumnIndex.ROLE.value] == "")].tolist(), sheet_index=2)  # & (df[ColumnIndex.ROLE.value] != "Total")
 
@@ -246,6 +240,7 @@ class WarLogsManager(DataExtractor):
 
             self._insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
             self._insert_missing_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
+            self._insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
             self._highlight_zeroes(sheet_index=1, df=df)
             self._hide_non_members(df.index[df[ColumnIndex.ROLE.value] == ""].tolist(), sheet_index=1)
 

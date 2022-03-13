@@ -32,25 +32,43 @@ class ApiConnectionManager:
     CLAN_ID = "8YJPUR"
     OFFICIAL_API_URL = "api.clashroyale.com"
     PROXY_API_URL = "proxy.royaleapi.dev"
+    PYTHONANYWHERE_PROXY = "proxy.server"
+    PYTHONANYWHERE_PORT = 3128
 
     def __init__(self):
         filename = './resources/cr-api-key.txt'
         with open(filename, 'r') as file:
             self.token = file.read()
-            self.conn = http.client.HTTPSConnection(self.PROXY_API_URL)
+            self.conn = http.client.HTTPSConnection(self.PYTHONANYWHERE_PROXY, self.PYTHONANYWHERE_PORT)
+            self.conn.set_tunnel(self.PROXY_API_URL)
             self.headers = { 'Authorization': 'Bearer {0}'.format(self.token) }
             self.WAR_LOG_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/riverracelog"
             self.MEMBERS_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/members"
 
     def get_member_data(self):
-        self.conn.request("GET", self.MEMBERS_ENDPOINT, None, self.headers)
-        response = self.conn.getresponse().read().decode("utf-8")
+        response = ""
+        for i in range(10):
+            try:
+                self.conn.request("GET", self.MEMBERS_ENDPOINT, None, self.headers)
+                response = self.conn.getresponse().read().decode("utf-8")
+                print(response)
+                if response != "":
+                    break
+            except Exception:
+                print("Failed request to get member data. Try again.")
         members = json.loads(response)
         return members
 
     def get_war_data(self):
-        self.conn.request("GET", self.WAR_LOG_ENDPOINT, None, self.headers)
-        response = self.conn.getresponse().read().decode("utf-8")
+        response = ""
+        for i in range(10):
+            try:
+                self.conn.request("GET", self.WAR_LOG_ENDPOINT, None, self.headers)
+                response = self.conn.getresponse().read().decode("utf-8")
+                if response != "":
+                    break
+            except Exception:
+                print("Failed request to get war data. Try again.")
         data = json.loads(response)
         return data
 
