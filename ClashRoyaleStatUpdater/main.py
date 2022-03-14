@@ -1,7 +1,7 @@
 import os
 
 import pandas as pd
-from flask import Flask
+from flask import Flask, render_template
 
 from src.ClashRoyaleAPI import ApiConnectionManager
 from src.SpreadsheetLoader import SpreadsheetLoader, SpreadsheetLoaderSettings
@@ -38,6 +38,7 @@ def mark_update():
 
 @app.route('/')
 def hello():
+    """
     return {
         "Update Summary"     : f'{localhost}/update/summary',
         "Update War logs"    : f'{localhost}/update/war-logs',
@@ -45,6 +46,9 @@ def hello():
         "Update Statistics"  : f'{localhost}/update/statistics',
         "Update Everything"  : f'{localhost}/update/all'
     }
+    """
+    return render_template('index.html')
+
 
 
 @app.route('/update/summary')

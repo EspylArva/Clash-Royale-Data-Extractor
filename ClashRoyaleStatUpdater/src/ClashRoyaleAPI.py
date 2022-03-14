@@ -35,24 +35,27 @@ class ApiConnectionManager:
     PYTHONANYWHERE_PROXY = "proxy.server"
     PYTHONANYWHERE_PORT = 3128
 
-    def __init__(self):
+    def __init__(self, dev_mode=False):
         filename = './resources/cr-api-key.txt'
         with open(filename, 'r') as file:
             self.token = file.read()
-            self.conn = http.client.HTTPSConnection(self.PYTHONANYWHERE_PROXY, self.PYTHONANYWHERE_PORT)
-            self.conn.set_tunnel(self.PROXY_API_URL)
+            if dev_mode == True:
+                self.conn = http.client.HTTPSConnection(self.PROXY_API_URL)
+            else:
+                self.conn = http.client.HTTPSConnection(self.PYTHONANYWHERE_PROXY, self.PYTHONANYWHERE_PORT)
+                self.conn.set_tunnel(self.PROXY_API_URL)
             self.headers = { 'Authorization': 'Bearer {0}'.format(self.token) }
             self.WAR_LOG_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/riverracelog"
             self.MEMBERS_ENDPOINT = f"/v1/clans/%23{self.CLAN_ID}/members"
 
     def get_member_data(self):
-        response = ""
+        response = "{}"
         for i in range(10):
             try:
                 self.conn.request("GET", self.MEMBERS_ENDPOINT, None, self.headers)
                 response = self.conn.getresponse().read().decode("utf-8")
                 print(response)
-                if response != "":
+                if response != "{}":
                     break
             except Exception:
                 print("Failed request to get member data. Try again.")
@@ -60,12 +63,12 @@ class ApiConnectionManager:
         return members
 
     def get_war_data(self):
-        response = ""
+        response = "{}"
         for i in range(10):
             try:
                 self.conn.request("GET", self.WAR_LOG_ENDPOINT, None, self.headers)
                 response = self.conn.getresponse().read().decode("utf-8")
-                if response != "":
+                if response != "{}":
                     break
             except Exception:
                 print("Failed request to get war data. Try again.")
