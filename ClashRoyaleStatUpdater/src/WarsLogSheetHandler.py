@@ -254,7 +254,31 @@ class WarLogsManager(DataExtractor):
         _df = df.filter(regex="[a-zA-Z]")
         _range = f'A1:E'
         _values = [_df.columns.tolist()] + _df.values.tolist()
-        self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).update(_range, _values, value_input_option='USER_ENTERED')
+
+        tags = self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).get_values("B2:B")
+
+        for i, val in _df.iterrows():
+            if val[1].split(";")[1][1:-2] not in [tag[0] for tag in tags]:
+                # noinspection PyTypeChecker
+                body = {
+                    'requests': [{
+                        "insertDimension": {
+                            "range"            : {
+                                "sheetId"   : sheet_id,
+                                "dimension" : "ROWS",
+                                "startIndex": i+1,
+                                "endIndex"  : i+2
+                            },
+                            "inheritFromBefore": False
+                        }
+                    }]
+                }
+                self.sheet_accessor.get_gc().batch_update(body)
+
+                # noinspection PyTypeChecker
+                _range = f'A{i+2}:E{i+2}'  # print(f'Range : {_range}')
+                _values = [val.tolist()]  # print(f'Values: {_values}')
+                self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).update(_range, _values, value_input_option='USER_ENTERED')
 
     def _insert_missing_data(self, df: DataFrame, sheet_id: int):
         _df = df.filter(regex="[0-9]+:[0-9]+")
@@ -278,5 +302,9 @@ class WarLogsManager(DataExtractor):
 
             _range = f'F1:{chr(ord("F") + _df.shape[1] - 1)}'
             _values = [_df.columns.tolist()] + _df.values.tolist()
+
+            print(body)
+            print(_range)
+            print(_values)
 
             self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).update(_range, _values, value_input_option='USER_ENTERED')
