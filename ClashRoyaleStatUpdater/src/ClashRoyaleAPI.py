@@ -54,7 +54,6 @@ class ApiConnectionManager:
             try:
                 self.conn.request("GET", self.MEMBERS_ENDPOINT, None, self.headers)
                 response = self.conn.getresponse().read().decode("utf-8")
-                print(response)
                 if response != "{}":
                     break
             except Exception:

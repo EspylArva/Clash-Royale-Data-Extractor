@@ -276,8 +276,6 @@ class WarLogsManager(DataExtractor):
         _range = f'A1:E'
         _values = [_df.columns.tolist()] + _df.values.tolist()
 
-        print(_values)
-
         self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).update(_range, _values, value_input_option='USER_ENTERED')
 
     def _insert_missing_data(self, df: DataFrame, sheet_id: int):

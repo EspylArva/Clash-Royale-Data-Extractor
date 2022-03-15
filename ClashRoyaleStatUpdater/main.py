@@ -21,11 +21,15 @@ with open(filename, 'r') as file:
     pd.set_option('display.max_rows', None)
 
 loader = SpreadsheetLoader(settings=SpreadsheetLoaderSettings(data))
-api_connection_manager = ApiConnectionManager()
+api_connection_manager = ApiConnectionManager(dev_mode=False)
 
 summary_manager = SummaryManager(api_connection_manager, loader)
 warlogs_manager = WarLogsManager(api_connection_manager, loader)
 stat_manager = StatManager(api_connection_manager, loader)
+
+with open("./resources/build.txt", 'r') as file:
+    build_number = file.read()
+
 
 ip = "127.0.0.1"
 port = 8080
@@ -34,6 +38,9 @@ localhost = f'http://{ip}:{port}'
 
 def mark_update():
     loader.get_gc().get_worksheet(0).update_acell("L1", "Mise-à-jour en cours... Merci de patienter...")
+    loader.get_gc().get_worksheet(1).update_acell("A1", "Mise-à-jour en cours... Merci de patienter...")
+    loader.get_gc().get_worksheet(2).update_acell("A1", "Mise-à-jour en cours... Merci de patienter...")
+    loader.get_gc().get_worksheet(3).update_acell("A1", "Mise-à-jour en cours... Merci de patienter...")
 
 
 @app.route('/')
@@ -78,6 +85,8 @@ def update_everything():
     warlogs_manager.update_war_results()
     warlogs_manager.update_boat_results()
     summary_manager.update_summary()
+    loader.get_gc().get_worksheet(3).update_acell("A1", "")
+    loader.get_gc().get_worksheet(0).update_acell("M1", f"build : {build_number}")
     return "Update finished"
 
 
