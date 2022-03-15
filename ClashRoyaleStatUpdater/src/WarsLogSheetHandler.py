@@ -226,7 +226,7 @@ class WarLogsManager(DataExtractor):
 
             self._insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
             self._insert_missing_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
-            self._insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
+            self._insert_members_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
             self._highlight_zeroes(2, df)
             self._hide_non_members(df.index[(df[ColumnIndex.ROLE.value] == "")].tolist(), sheet_index=2)  # & (df[ColumnIndex.ROLE.value] != "Total")
 
@@ -240,7 +240,7 @@ class WarLogsManager(DataExtractor):
 
             self._insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
             self._insert_missing_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
-            self._insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
+            self._insert_members_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(1).id)
             self._highlight_zeroes(sheet_index=1, df=df)
             self._hide_non_members(df.index[df[ColumnIndex.ROLE.value] == ""].tolist(), sheet_index=1)
 
@@ -252,11 +252,7 @@ class WarLogsManager(DataExtractor):
 
     def _insert_alpha_members(self, df: DataFrame, sheet_id: int):
         _df = df.filter(regex="[a-zA-Z]")
-        _range = f'A1:E'
-        _values = [_df.columns.tolist()] + _df.values.tolist()
-
         tags = self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).get_values("B2:B")
-
         for i, val in _df.iterrows():
             if val[1].split(";")[1][1:-2] not in [tag[0] for tag in tags]:
                 # noinspection PyTypeChecker
@@ -266,8 +262,8 @@ class WarLogsManager(DataExtractor):
                             "range"            : {
                                 "sheetId"   : sheet_id,
                                 "dimension" : "ROWS",
-                                "startIndex": i+1,
-                                "endIndex"  : i+2
+                                "startIndex": i + 1,
+                                "endIndex"  : i + 2
                             },
                             "inheritFromBefore": False
                         }
@@ -275,10 +271,14 @@ class WarLogsManager(DataExtractor):
                 }
                 self.sheet_accessor.get_gc().batch_update(body)
 
-                # noinspection PyTypeChecker
-                _range = f'A{i+2}:E{i+2}'  # print(f'Range : {_range}')
-                _values = [val.tolist()]  # print(f'Values: {_values}')
-                self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).update(_range, _values, value_input_option='USER_ENTERED')
+    def _insert_members_data(self, df: DataFrame, sheet_id: int):
+        _df = df.filter(regex="[a-zA-Z]")
+        _range = f'A1:E'
+        _values = [_df.columns.tolist()] + _df.values.tolist()
+
+        print(_values)
+
+        self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).update(_range, _values, value_input_option='USER_ENTERED')
 
     def _insert_missing_data(self, df: DataFrame, sheet_id: int):
         _df = df.filter(regex="[0-9]+:[0-9]+")
