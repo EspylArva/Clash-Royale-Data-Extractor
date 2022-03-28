@@ -75,7 +75,7 @@ class SummaryManager(DataExtractor):
         map_changes = { "promotion": { }, "retrogradation": { } }
         for i, member in df.iterrows():
             if member[ColumnIndex.ROLE] == role.value:
-                points = int(member[ColumnIndex.RATIO]) if member[ColumnIndex.RATIO] != "" else 0
+                points = int(member[ColumnIndex.AVERAGE]) if member[ColumnIndex.AVERAGE] != "" else 0
                 inactivity = int(member[ColumnIndex.INACTIVITY].split("/")[0]) if member[ColumnIndex.INACTIVITY] != "" else 0
                 elderness = int(member[ColumnIndex.INACTIVITY].split("/")[1]) if member[ColumnIndex.INACTIVITY] != "" else 0
 

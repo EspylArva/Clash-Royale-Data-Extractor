@@ -21,7 +21,7 @@ with open(filename, 'r') as file:
     pd.set_option('display.max_rows', None)
 
 loader = SpreadsheetLoader(settings=SpreadsheetLoaderSettings(data))
-api_connection_manager = ApiConnectionManager(dev_mode=False)
+api_connection_manager = ApiConnectionManager(dev_mode=True)
 
 summary_manager = SummaryManager(api_connection_manager, loader)
 warlogs_manager = WarLogsManager(api_connection_manager, loader)
