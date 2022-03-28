@@ -55,7 +55,7 @@ class StatManager(DataExtractor):
                                                                  value_input_option='USER_ENTERED')
 
     def get_statistics(self):
-        warlogs = self._get_wars_log()
+        warlogs = self.get_wars_log()
         statistics = stream(warlogs).map(lambda x: {
             "war_id"                  : x["id"],
 

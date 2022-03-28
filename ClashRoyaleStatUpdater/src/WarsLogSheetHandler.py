@@ -3,6 +3,7 @@ from enum import Enum
 from itertools import groupby
 from operator import itemgetter
 
+import numpy as np
 import pandas as pd
 from gspread.exceptions import APIError
 from pandas import DataFrame
@@ -59,7 +60,7 @@ class WarLogsManager(DataExtractor):
         self.sheet_accessor.get_gc().batch_update(body)
 
     def _fetch_boat_results(self, df: DataFrame):
-        boats_log = self._get_wars_log()
+        boats_log = self.get_wars_log()
         boats_df = DataFrame(columns=[ColumnIndex.TAG.value])
         for war in boats_log:
             participants = [x["tag"] for x in war["war_record"]["clan"]["participants"]]
@@ -69,7 +70,7 @@ class WarLogsManager(DataExtractor):
         return df.merge(boats_df.set_index(ColumnIndex.TAG.value), on=ColumnIndex.TAG.value, how="outer")
 
     def _fetch_members_from_war_logs(self, df: DataFrame):
-        wars_log = self._get_wars_log()
+        wars_log = self.get_wars_log()
         participants_tag = dict()
         for record in wars_log:
             participant = record["war_record"]["clan"]["participants"]
@@ -85,7 +86,7 @@ class WarLogsManager(DataExtractor):
         return df
 
     def _fetch_war_results(self, df: DataFrame):
-        wars_log = self._get_wars_log()
+        wars_log = self.get_wars_log()
         wars_df = DataFrame(columns=[ColumnIndex.TAG.value])
         for war in wars_log:
             participants = [x["tag"] for x in war["war_record"]["clan"]["participants"]]
@@ -279,11 +280,18 @@ class WarLogsManager(DataExtractor):
         self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).update(_range, _values, value_input_option='USER_ENTERED')
 
     def _insert_missing_data(self, df: DataFrame, sheet_id: int):
-        _df = df.filter(regex="[0-9]+:[0-9]+")
+        _df = df.copy(deep=True)
+        for col in _df.columns[4:]:
+            _df[col] = np.where((df[ColumnIndex.ROLE] != "") & (df[col] == ""), 0, df[col])
+        _df = _df.filter(regex="[0-9]+:[0-9]+")
         history = self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).get_values("F1:1")[0]
         _df = _df.drop(columns=history, errors='ignore')
 
+        for col in _df.columns:
+            df[col] = _df[col]
+
         if _df.shape[1] > 0:
+
             body = { 'requests': [] }
             body["requests"].append({
                 "insertDimension": {
@@ -300,9 +308,5 @@ class WarLogsManager(DataExtractor):
 
             _range = f'F1:{chr(ord("F") + _df.shape[1] - 1)}'
             _values = [_df.columns.tolist()] + _df.values.tolist()
-
-            print(body)
-            print(_range)
-            print(_values)
 
             self.sheet_accessor.get_gc().get_worksheet_by_id(sheet_id).update(_range, _values, value_input_option='USER_ENTERED')

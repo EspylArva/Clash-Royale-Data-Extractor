@@ -42,7 +42,7 @@ class SummaryManager(DataExtractor):
 
     def _build_summary(self):
         inactivities = self._get_inactivity()
-        members = self._get_current_members()
+        members = self.get_current_members()
 
         pseudos = list()
         grades = list()

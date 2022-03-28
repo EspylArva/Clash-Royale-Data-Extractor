@@ -1,7 +1,6 @@
-import os
-
 import pandas as pd
-from flask import Flask, render_template
+from flask import Flask, render_template, request
+from pyxtension.streams import stream
 
 from src.ClashRoyaleAPI import ApiConnectionManager
 from src.SpreadsheetLoader import SpreadsheetLoader, SpreadsheetLoaderSettings
@@ -21,7 +20,7 @@ with open(filename, 'r') as file:
     pd.set_option('display.max_rows', None)
 
 loader = SpreadsheetLoader(settings=SpreadsheetLoaderSettings(data))
-api_connection_manager = ApiConnectionManager(dev_mode=True)
+api_connection_manager = ApiConnectionManager(dev_mode=False)
 
 summary_manager = SummaryManager(api_connection_manager, loader)
 warlogs_manager = WarLogsManager(api_connection_manager, loader)
@@ -57,7 +56,6 @@ def hello():
     return render_template('index.html')
 
 
-
 @app.route('/update/summary')
 def update_summary():
     return summary_manager.update_summary()
@@ -88,6 +86,17 @@ def update_everything():
     loader.get_gc().get_worksheet(3).update_acell("A1", "")
     loader.get_gc().get_worksheet(0).update_acell("M1", f"build : {build_number}")
     return "Update finished"
+
+
+@app.route('/warlogs')
+def get_warlogs():
+    war_id = request.args.get('id')
+    return str(stream(warlogs_manager.get_wars_log()).filter(lambda _: _["id"] == war_id).toList())
+
+
+@app.route('/members')
+def get_members():
+    return str(summary_manager.get_current_members())
 
 
 @app.route('/test')

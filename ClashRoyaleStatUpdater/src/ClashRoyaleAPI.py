@@ -82,7 +82,7 @@ class DataExtractor:
         self.members_data = api_connection_manager.get_member_data()
         self.sheet_accessor = accessor
 
-    def _get_current_members(self):
+    def get_current_members(self):
         clan_members = stream(self.members_data["items"]) \
             .sorted(lambda member: member["name"]) \
             .map(
@@ -95,7 +95,7 @@ class DataExtractor:
             .toJson()
         return clan_members
 
-    def _get_wars_log(self):
+    def get_wars_log(self):
         return stream(self.war_data["items"]) \
             .map(
                 lambda season: {
