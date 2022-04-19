@@ -225,7 +225,7 @@ class WarLogsManager(DataExtractor):
         try:
             df = self.get_boat_sheet_update()
 
-            self._clear_colors(0, df)
+            self._clear_colors(2, df)
 
             self._insert_alpha_members(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
             self._insert_missing_data(df=df, sheet_id=self.sheet_accessor.get_gc().get_worksheet(2).id)
