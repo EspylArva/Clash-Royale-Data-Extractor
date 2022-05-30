@@ -40,7 +40,7 @@ class WarLogsManager(DataExtractor):
             "repeatCell": {
                 "range" : {
                     "sheetId"         : sheet_id,
-                    "startRowIndex"   : 0, "endRowIndex": row_count,
+                    "startRowIndex"   : 1, "endRowIndex": row_count,
                     "startColumnIndex": 0, "endColumnIndex": col_count
                 },
                 "cell"  : { "userEnteredFormat": {
