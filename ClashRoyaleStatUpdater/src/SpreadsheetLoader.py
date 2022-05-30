@@ -41,12 +41,26 @@ class SpreadsheetLoader:
     def next_available_col(self, spreadsheet_index: int, penultimate=False):
         str_list = list(filter(None, self.get_gc().get_worksheet(index=spreadsheet_index).row_values(1)))
         penultimate_offset = 1 if penultimate else 0
-        return chr(ord("A") + len(str_list) - penultimate_offset)
+        return "".join([self.to_char(j) for j in self.to_base(len(str_list) - penultimate_offset, 26)])
 
     def next_available_col_index(self, spreadsheet_index: int, penultimate=False):
         str_list = list(filter(None, self.get_gc().get_worksheet(index=spreadsheet_index).row_values(1)))
         penultimate_offset = 1 if penultimate else 0
         return len(str_list) - penultimate_offset + 1
+
+    @staticmethod
+    def to_base(num: int, base: int):
+        i = num // base
+        if num == 0:
+            return [num]
+        elif i > 0:
+            return SpreadsheetLoader.to_base(i - 1, base) + [int(num % base)]
+        else:
+            return [int(num % base)]
+
+    @staticmethod
+    def to_char(n):
+        return chr(ord("A") + n)
 
     def next_available_row(self, spreadsheet_index: int):
         str_list = list(filter(None, self.get_gc().get_worksheet(index=spreadsheet_index).col_values(1)))
